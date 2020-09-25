@@ -2918,9 +2918,9 @@ RCP<const Basic> erfc(const RCP<const Basic> &arg)
 }
 
 template <typename BesselClass,
-          RCP<const Basic> (*bessel_create)(const RCP<const Basic> &, const RCP<const Basic> &)>
-static inline RCP<const Basic> bessel_j_or_i(const RCP<const Basic> &nu, const RCP<const Basic> &z,
-                                             const RCP<const Integer> &a)
+RCP<const Basic> (*create)(const RCP<const Basic> &, const RCP<const Basic> &)>
+static inline RCP<const Basic> bessel_ji(const RCP<const Basic> &nu, const RCP<const Basic> &z,
+                                         const RCP<const Integer> &a)
 {
     if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
         if (is_a_Number(*nu)) {
@@ -2929,20 +2929,20 @@ static inline RCP<const Basic> bessel_j_or_i(const RCP<const Basic> &nu, const R
                 return one;
             } else if (is_a<Integer>(nnu) or nnu.is_positive()) {
                 return zero;
-            } else if (nnu.is_negative()) {
-                return ComplexInf;
             } else if (is_a_Complex(nnu)) {
                 const ComplexBase &c = down_cast<const ComplexBase &>(nnu);
                 RCP<const Number> real_part = c.real_part();
                 if (real_part->is_positive()) {
                     return zero;
                 } else if (real_part->is_zero()) {
-                    // pure imaginary
                     return Nan;
                 } else {
                     // negative
                     return ComplexInf;
                 }
+            } else {
+                // negative
+                return ComplexInf;
             }
         }
     }
@@ -2950,27 +2950,33 @@ static inline RCP<const Basic> bessel_j_or_i(const RCP<const Basic> &nu, const R
     if (could_extract_minus(*z)) {
         return mul(pow(z, nu),
                    mul(pow(mul(minus_one, z), mul(minus_one, nu)),
-                       bessel_create(nu, mul(minus_one, z))));
-    } else if (is_a<Integer>(*nu)) {
-        if (could_extract_minus(*nu)) {
-            return mul(pow(mul(minus_one, a), mul(minus_one, nu)),
-                       bessel_create(nu, mul(minus_one, z)));
-        }
+                       create(nu, mul(minus_one, z))));
+    } else if (is_a<Integer>(*nu) and could_extract_minus(*nu)) {
+        return mul(pow(mul(minus_one, a), mul(minus_one, nu)),
+                   create(nu, mul(minus_one, z)));
     }
 
     return make_rcp<const BesselClass>(nu, z);
 }
 
+static bool bessel_ji_is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+{
+    if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
+        if (is_a_Number(*nu)) {
+            return false;
+        }
+    }
+    if (could_extract_minus(*z)) {
+        return false;
+    } else if (is_a<Integer>(*nu) and could_extract_minus(*nu)) {
+        return false;
+    }
+    return true;
+}
+
 bool BesselJ::is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
 {
-    /*if (is_a<Integer>(*arg) and down_cast<const Integer &>(*arg).is_zero())
-        return false;
-    if (could_extract_minus(*arg))
-        return false;
-    if (is_a_Number(*arg) and not down_cast<const Number &>(*arg).is_exact()) {
-        return false;
-    }*/
-    return true;
+    return bessel_ji_is_canonical(nu, z);
 }
 
 RCP<const Basic> BesselJ::create(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
@@ -2981,7 +2987,7 @@ RCP<const Basic> BesselJ::create(const RCP<const Basic> &nu, const RCP<const Bas
 RCP<const Basic> besselj(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 {
     RCP<const Integer> &a = minus_one;
-    return bessel_j_or_i<BesselJ, besselj>(nu, z, a);
+    return bessel_ji<BesselJ, besselj>(nu, z, a);
 }
 
 bool BesselY::is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
@@ -3029,7 +3035,7 @@ RCP<const Basic> bessely(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 
 bool BesselI::is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
 {
-    return true;
+    return bessel_ji_is_canonical(nu, z);
 }
 
 RCP<const Basic> BesselI::create(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
@@ -3040,7 +3046,7 @@ RCP<const Basic> BesselI::create(const RCP<const Basic> &nu, const RCP<const Bas
 RCP<const Basic> besseli(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 {
     RCP<const Integer> &a = minus_one;
-    return bessel_j_or_i<BesselI, besseli>(nu, z, a);
+    return bessel_ji<BesselI, besseli>(nu, z, a);
 }
 
 Gamma::Gamma(const RCP<const Basic> &arg) : OneArgFunction{arg}
