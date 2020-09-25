@@ -1243,7 +1243,7 @@ class BesselBase : public TwoArgFunction
 private:
     virtual RCP<const Integer> a() const = 0;
     virtual RCP<const Integer> b() const = 0;
-    friend bool fdiff(const Ptr<RCP<const Basic>> &ret, 
+    friend bool fdiff(const Ptr<RCP<const Basic>> &ret,
                       const BesselBase &self, unsigned index);
 public:
     IMPLEMENT_TYPEID(SYMENGINE_BESSELJ)
@@ -1322,7 +1322,35 @@ public:
 RCP<const Basic> bessely(const RCP<const Basic> &nu,
                          const RCP<const Basic> &z);
 
+class BesselI : public BesselBase
+{
+private:
+    inline virtual RCP<const Integer> a() const final
+    {
+        return minus_one;
+    }
+    inline virtual RCP<const Integer> b() const final
+    {
+        return one;
+    }
+public:
+    IMPLEMENT_TYPEID(SYMENGINE_BESSELI)
+    //! BesselJ Constructor
+    BesselI(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+        : BesselBase(nu, z)
+    {
+        SYMENGINE_ASSIGN_TYPEID()
+        SYMENGINE_ASSERT(is_canonical(nu, z))
+    }
+    bool is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const;
+    //! \return canonicalized `BesselJ`
+    virtual RCP<const Basic> create(const RCP<const Basic> &nu,
+                                    const RCP<const Basic> &z) const;
+};
 
+//! Canonicalize Bessel
+RCP<const Basic> besseli(const RCP<const Basic> &nu,
+                         const RCP<const Basic> &z);
 
 class Abs : public OneArgFunction
 {
