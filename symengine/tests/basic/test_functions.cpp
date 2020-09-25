@@ -112,7 +112,10 @@ using SymEngine::uppergamma;
 using SymEngine::UpperGamma;
 using SymEngine::Beta;
 using SymEngine::beta;
+using SymEngine::BesselBase;
 using SymEngine::BesselJ;
+using SymEngine::BesselY;
+using SymEngine::BesselI;
 using SymEngine::abs;
 using SymEngine::Subs;
 using SymEngine::FunctionWrapper;
@@ -3683,7 +3686,7 @@ TEST_CASE("Polygamma: functions", "[functions]")
 
 TEST_CASE("Bessel: functions", "[functions]")
 {
-    RCP<const Symbol> n = symbol("n");
+    RCP<const Symbol> nu = symbol("nu");
     RCP<const Symbol> z = symbol("z");
     RCP<const Basic> i5 = integer(5);
 
@@ -3724,6 +3727,24 @@ TEST_CASE("Bessel: functions", "[functions]")
         r1 = bessel(Complex::from_two_nums(*one, *integer(3)), zero);
         r2 = zero;
         REQUIRE(eq(*r1, *r2));
+
+        r1 = bessel(Complex::from_two_nums(*integer(-3), *one), zero);
+        r2 = ComplexInf;
+        REQUIRE(eq(*r1, *r2));
+        
+        r1 = bessel(Complex::from_two_nums(*zero, *integer(-2)), zero);
+        r2 = Nan;
+        REQUIRE(eq(*r1, *r2));
+        
+        // TODO when assumptions implemented
+        // n_int, k_int = Symbol('n_int', integer=True), Symbol('k_int_nonzero', integer=True, zero=False)
+        // assert f(n, 0) != S.One and f(n, 0) != S.Zero  # PASSES (left unevaluated) but should be tested
+        // assert f(k_int_nonzero, 0) is S.Zero  # FAILS
+        r1 = bessel(nu, zero);
+        REQUIRE(neq(*r1, *one));
+        REQUIRE(neq(*r1, *zero));
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *nu));
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
     }
 
     r1 = bessely(zero, zero);
@@ -3739,18 +3760,18 @@ TEST_CASE("Bessel: functions", "[functions]")
 //        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
 //        REQUIRE(eq(*r1, *r2));
 
-        r1 = bessel(n, z)->diff(z);
-        r2 = sub(div(bessel(sub(n, one), z), integer(2)), div(bessel(add(n, one), z), integer(2)));
+        r1 = bessel(nu, z)->diff(z);
+        r2 = sub(div(bessel(sub(nu, one), z), integer(2)), div(bessel(add(nu, one), z), integer(2)));
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
-        r1 = bessel(n, mul(z, i5))->diff(z);
-        r2 = mul(i5, sub(div(bessel(sub(n, one), mul(z, i5)), integer(2)), div(bessel(add(n, one), mul(z, i5)), integer(2))));
+        r1 = bessel(nu, mul(z, i5))->diff(z);
+        r2 = mul(i5, sub(div(bessel(sub(nu, one), mul(z, i5)), integer(2)), div(bessel(add(nu, one), mul(z, i5)), integer(2))));
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
-        r1 = bessel(n, z)->diff(n);
-        r2 = Derivative::create(bessel(n, z), {n});
+        r1 = bessel(nu, z)->diff(nu);
+        r2 = Derivative::create(bessel(nu, z), {nu});
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
     }
