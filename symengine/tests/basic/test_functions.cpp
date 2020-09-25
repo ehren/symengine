@@ -3681,7 +3681,7 @@ TEST_CASE("Polygamma: functions", "[functions]")
     REQUIRE(eq(*r1, *r2));
 }
 
-TEST_CASE("BesselJ: functions", "[functions]")
+TEST_CASE("Bessel: functions", "[functions]")
 {
     RCP<const Symbol> n = symbol("n");
     RCP<const Symbol> z = symbol("z");
@@ -3689,22 +3689,34 @@ TEST_CASE("BesselJ: functions", "[functions]")
 
     RCP<const Basic> r1;
     RCP<const Basic> r2;
-
-    //assert besselj(n, z).diff(z) == besselj(n - 1, z)/2 - besselj(n + 1, z)/2
-    r1 = besselj(n, z)->diff(z);
-    r2 = sub(div(besselj(sub(n, one), z), i2), div(besselj(add(n, one), z), i2));
+    
+    r1 = bessely(zero, zero);
+    r2 = NegInf;
     printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
     REQUIRE(eq(*r1, *r2));
 
-    r1 = besselj(n, mul(z, i2))->diff(z);
-    r2 = mul(sub(div(besselj(sub(n, one), mul(z, i2)), i2), div(besselj(add(n, one), mul(z, i2)), i2)), i2);
-    printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
-    REQUIRE(eq(*r1, *r2));
+    for (const auto & bessel : {SymEngine::besselj, SymEngine::bessely}) {
+//        r1 = bessel(zero, zero);
+//        r2 = one;
+//        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
+//        REQUIRE(eq(*r1, *r2));
 
-    r1 = besselj(n, z)->diff(n);
-    r2 = Derivative::create(besselj(n, z), {n});
-    printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
-    REQUIRE(eq(*r1, *r2));
+        r1 = bessel(n, z)->diff(z);
+        r2 = sub(div(bessel(sub(n, one), z), i2), div(bessel(add(n, one), z), i2));
+        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
+        REQUIRE(eq(*r1, *r2));
+
+        r1 = bessel(n, mul(z, i2))->diff(z);
+        r2 = mul(sub(div(bessel(sub(n, one), mul(z, i2)), i2), div(bessel(add(n, one), mul(z, i2)), i2)), i2);
+        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
+        REQUIRE(eq(*r1, *r2));
+
+        r1 = bessel(n, z)->diff(n);
+        r2 = Derivative::create(bessel(n, z), {n});
+        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
+        REQUIRE(eq(*r1, *r2));
+    }
+
 }
 
 TEST_CASE("Abs: functions", "[functions]")

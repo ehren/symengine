@@ -3033,7 +3033,7 @@ bool BesselY::is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z
 
 RCP<const Basic> BesselY::create(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
 {
-    return besselj(nu, z);
+    return bessely(nu, z);
 }
 
 RCP<const Basic> bessely(const RCP<const Basic> &nu, const RCP<const Basic> &z)
@@ -3071,46 +3071,10 @@ RCP<const Basic> bessely(const RCP<const Basic> &nu, const RCP<const Basic> &z)
         }
     }
 
-
-    // if z.could_extract_minus_sign():
-    //     return (z)**nu*(-z)**(-nu)*besselj(nu, -z)
-    // if nu.is_integer:
-    //     if nu.could_extract_minus_sign():
-    //         return S.NegativeOne**(-nu)*besselj(-nu, z)
-    //     newz = z.extract_multiplicatively(I)
-    //     if newz:  # NOTE we don't want to change the function if z==0
-    //         return I**(nu)*besseli(nu, newz)
-
-    if (could_extract_minus(*z)) {
-        return mul(pow(z, nu),
-                   mul(pow(mul(minus_one, z), mul(minus_one, nu)),
-                       besselj(nu, mul(minus_one, z))));
-    } else if (is_a<Integer>(*nu)) {
-        if (could_extract_minus(*nu)) {
-            return mul(pow(minus_one, mul(minus_one, nu)),
-                       besselj(mul(minus_one, nu), z));
-        }
-
-        // TODO port this:
-        // newz = z.extract_multiplicatively(I)
-        // if newz:  # NOTE we don't want to change the function if z==0
-        //     return I**(nu)*besseli(nu, newz)
+    if (is_a<Integer>(*nu) and could_extract_minus(*nu)) {
+        return mul(pow(minus_one, mul(minus_one, nu)),
+                   bessely(mul(minus_one, nu), z));
     }
-
-    // TODO port this
-    // # branch handling:
-    // from sympy import unpolarify, exp
-    // if nu.is_integer:
-    //     newz = unpolarify(z)
-    //     if newz != z:
-    //         return besselj(nu, newz)
-    // else:
-    //     newz, n = z.extract_branch_factor()
-    //     if n != 0:
-    //         return exp(2*n*pi*nu*I)*besselj(nu, newz)
-    // nnu = unpolarify(nu)
-    // if nu != nnu:
-    //     return besselj(nnu, z)
 
     return make_rcp<const BesselY>(nu, z);
 }
