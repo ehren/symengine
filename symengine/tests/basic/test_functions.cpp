@@ -3720,6 +3720,10 @@ TEST_CASE("Bessel: functions", "[functions]")
         r1 = bessel(real_double(-10.2), zero);
         r2 = ComplexInf;
         REQUIRE(eq(*r1, *r2));
+
+        r1 = bessel(Complex::from_two_nums(*one, *integer(3)), zero);
+        r2 = zero;
+        REQUIRE(eq(*r1, *r2));
     }
 
     r1 = bessely(zero, zero);
