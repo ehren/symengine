@@ -112,6 +112,7 @@ using SymEngine::uppergamma;
 using SymEngine::UpperGamma;
 using SymEngine::Beta;
 using SymEngine::beta;
+using SymEngine::BesselJ;
 using SymEngine::abs;
 using SymEngine::Subs;
 using SymEngine::FunctionWrapper;
@@ -3677,6 +3678,32 @@ TEST_CASE("Polygamma: functions", "[functions]")
              Subs::create(Derivative::create(polygamma(_x, mul(i3, x)), {_x}),
                           {{_x, mul(i2, x)}}));
     r2 = add(r2, mul(i3, polygamma(add(mul(i2, x), one), mul(i3, x))));
+    REQUIRE(eq(*r1, *r2));
+}
+
+TEST_CASE("BesselJ: functions", "[functions]")
+{
+    RCP<const Symbol> n = symbol("n");
+    RCP<const Symbol> z = symbol("z");
+    RCP<const Basic> i2 = integer(2);
+
+    RCP<const Basic> r1;
+    RCP<const Basic> r2;
+
+    //assert besselj(n, z).diff(z) == besselj(n - 1, z)/2 - besselj(n + 1, z)/2
+    r1 = besselj(n, z)->diff(z);
+    r2 = sub(div(besselj(sub(n, one), z), i2), div(besselj(add(n, one), z), i2));
+    printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
+    REQUIRE(eq(*r1, *r2));
+
+    r1 = besselj(n, mul(z, i2))->diff(z);
+    r2 = mul(sub(div(besselj(sub(n, one), mul(z, i2)), i2), div(besselj(add(n, one), mul(z, i2)), i2)), i2);
+    printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
+    REQUIRE(eq(*r1, *r2));
+
+    r1 = besselj(n, z)->diff(n);
+    r2 = Derivative::create(besselj(n, z), {n});
+    printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
     REQUIRE(eq(*r1, *r2));
 }
 

@@ -1238,6 +1238,92 @@ RCP<const Basic> digamma(const RCP<const Basic> &x);
 
 RCP<const Basic> trigamma(const RCP<const Basic> &x);
 
+class BesselBase : public TwoArgFunction
+{
+private:
+    virtual RCP<const Integer> a() const = 0;
+    virtual RCP<const Integer> b() const = 0;
+    friend bool fdiff(const Ptr<RCP<const Basic>> &ret, 
+                      const BesselBase &self, unsigned index);
+public:
+    IMPLEMENT_TYPEID(SYMENGINE_BESSELJ)
+    inline RCP<const Basic> order() const
+    {
+        return get_arg1();
+    }
+    inline RCP<const Basic> argument() const
+    {
+        return get_arg2();
+    }
+    BesselBase(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+        : TwoArgFunction(nu, z)
+    {
+        SYMENGINE_ASSIGN_TYPEID()
+    }
+};
+
+class BesselJ : public BesselBase
+{
+private:
+    inline virtual RCP<const Integer> a() const final
+    {
+        return one;
+    }
+    inline virtual RCP<const Integer> b() const final
+    {
+        return one;
+    }
+public:
+    IMPLEMENT_TYPEID(SYMENGINE_BESSELJ)
+    //! BesselJ Constructor
+    BesselJ(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+        : BesselBase(nu, z)
+    {
+        SYMENGINE_ASSIGN_TYPEID()
+        SYMENGINE_ASSERT(is_canonical(nu, z))
+    }
+    bool is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const;
+    //! \return canonicalized `BesselJ`
+    virtual RCP<const Basic> create(const RCP<const Basic> &nu,
+                                    const RCP<const Basic> &z) const;
+};
+
+//! Canonicalize Bessel
+RCP<const Basic> besselj(const RCP<const Basic> &nu,
+                         const RCP<const Basic> &z);
+
+class BesselY : public BesselBase
+{
+private:
+    inline virtual RCP<const Integer> a() const final
+    {
+        return one;
+    }
+    inline virtual RCP<const Integer> b() const final
+    {
+        return one;
+    }
+public:
+    IMPLEMENT_TYPEID(SYMENGINE_BESSELY)
+    //! BesselJ Constructor
+    BesselY(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+        : BesselBase(nu, z)
+    {
+        SYMENGINE_ASSIGN_TYPEID()
+        SYMENGINE_ASSERT(is_canonical(nu, z))
+    }
+    bool is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const;
+    //! \return canonicalized `BesselJ`
+    virtual RCP<const Basic> create(const RCP<const Basic> &nu,
+                                    const RCP<const Basic> &z) const;
+};
+
+//! Canonicalize Bessel
+RCP<const Basic> bessely(const RCP<const Basic> &nu,
+                         const RCP<const Basic> &z);
+
+
+
 class Abs : public OneArgFunction
 {
     /*!    The absolute value function

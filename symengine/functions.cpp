@@ -148,8 +148,17 @@ RCP<const Basic> conjugate(const RCP<const Basic> &arg)
         const OneArgFunction &func = down_cast<const OneArgFunction &>(*arg);
         return func.create(conjugate(func.get_arg()));
     }
-    if (is_a<ATan2>(*arg) or is_a<LowerGamma>(*arg) or is_a<UpperGamma>(*arg)
-        or is_a<Beta>(*arg)) {
+
+    bool can_conjugate_two_arg = is_a<ATan2>(*arg) or is_a<LowerGamma>(*arg)
+                                 or is_a<UpperGamma>(*arg) or is_a<Beta>(*arg);
+    if (is_a<BesselBase>(*arg)) {
+        const BesselBase &bb = down_cast<const BesselBase &>(*arg);
+        if (is_a_Number(*bb.argument()) and not
+            down_cast<const Number &>(*bb.argument()).is_negative()) {
+            can_conjugate_two_arg = true;
+        }
+    }
+    if (can_conjugate_two_arg) {
         const TwoArgFunction &func = down_cast<const TwoArgFunction &>(*arg);
         return func.create(conjugate(func.get_arg1()),
                            conjugate(func.get_arg2()));
@@ -2906,6 +2915,204 @@ RCP<const Basic> erfc(const RCP<const Basic> &arg)
         return add(integer(2), neg(erfc(d)));
     }
     return make_rcp<const Erfc>(d);
+}
+
+bool BesselJ::is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
+{
+    /*if (is_a<Integer>(*arg) and down_cast<const Integer &>(*arg).is_zero())
+        return false;
+    if (could_extract_minus(*arg))
+        return false;
+    if (is_a_Number(*arg) and not down_cast<const Number &>(*arg).is_exact()) {
+        return false;
+    }*/
+    return true;
+}
+
+RCP<const Basic> BesselJ::create(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
+{
+    return besselj(nu, z);
+}
+
+RCP<const Basic> besselj(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+{
+//       if z.is_zero:
+//            if nu.is_zero:
+//                return S.One
+//            elif (nu.is_integer and nu.is_zero is False) or re(nu).is_positive:
+//                return S.Zero
+//            elif re(nu).is_negative and not (nu.is_integer is True):
+//                return S.ComplexInfinity
+//            elif nu.is_imaginary:
+//                return S.NaN
+//        if z is S.Infinity or (z is S.NegativeInfinity):
+//            return S.Zero
+
+    if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
+        if (is_a_Number(*nu)) {
+            const Number& nnu = down_cast<const Number &>(*nu);
+            if (nnu.is_zero()) {
+                return one;
+            } else if (is_a<Integer>(nnu)) {
+                return zero;
+            } else if (nnu.is_positive()) {
+                return zero;
+            } else if (nnu.is_negative()) {
+                return ComplexInf;
+            } else if (is_a_Complex(nnu)) {
+                const ComplexBase &c = down_cast<const ComplexBase &>(nnu);
+                RCP<const Number> real_part = c.real_part();
+                if (real_part->is_positive()) {
+                    return zero;
+                } else if (real_part->is_zero()) {
+                    // pure imaginary
+                    return Nan;
+                } else {
+                    // negative
+                    return ComplexInf;
+                }
+            }
+        }
+    }
+
+
+    // if z.could_extract_minus_sign():
+    //     return (z)**nu*(-z)**(-nu)*besselj(nu, -z)
+    // if nu.is_integer:
+    //     if nu.could_extract_minus_sign():
+    //         return S.NegativeOne**(-nu)*besselj(-nu, z)
+    //     newz = z.extract_multiplicatively(I)
+    //     if newz:  # NOTE we don't want to change the function if z==0
+    //         return I**(nu)*besseli(nu, newz)
+
+    if (could_extract_minus(*z)) {
+        return mul(pow(z, nu),
+                   mul(pow(mul(minus_one, z), mul(minus_one, nu)),
+                       besselj(nu, mul(minus_one, z))));
+    } else if (is_a<Integer>(*nu)) {
+        if (could_extract_minus(*nu)) {
+            return mul(pow(minus_one, mul(minus_one, nu)),
+                       besselj(mul(minus_one, nu), z));
+        }
+
+        // TODO port this:
+        // newz = z.extract_multiplicatively(I)
+        // if newz:  # NOTE we don't want to change the function if z==0
+        //     return I**(nu)*besseli(nu, newz)
+    }
+
+    // TODO port this
+    // # branch handling:
+    // from sympy import unpolarify, exp
+    // if nu.is_integer:
+    //     newz = unpolarify(z)
+    //     if newz != z:
+    //         return besselj(nu, newz)
+    // else:
+    //     newz, n = z.extract_branch_factor()
+    //     if n != 0:
+    //         return exp(2*n*pi*nu*I)*besselj(nu, newz)
+    // nnu = unpolarify(nu)
+    // if nu != nnu:
+    //     return besselj(nnu, z)
+
+    return make_rcp<const BesselJ>(nu, z);
+}
+
+bool BesselY::is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
+{
+    /*if (is_a<Integer>(*arg) and down_cast<const Integer &>(*arg).is_zero())
+        return false;
+    if (could_extract_minus(*arg))
+        return false;
+    if (is_a_Number(*arg) and not down_cast<const Number &>(*arg).is_exact()) {
+        return false;
+    }*/
+    return true;
+}
+
+RCP<const Basic> BesselY::create(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
+{
+    return besselj(nu, z);
+}
+
+RCP<const Basic> bessely(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+{
+    // if z.is_zero:
+    //     if nu.is_zero:
+    //         return S.NegativeInfinity
+    //     elif re(nu).is_zero is False:
+    //         return S.ComplexInfinity
+    //     elif re(nu).is_zero:
+    //         return S.NaN
+    //     if z is S.Infinity or z is S.NegativeInfinity:
+    //         return S.Zero
+
+    if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
+        if (is_a_Number(*nu)) {
+            const Number& nnu = down_cast<const Number &>(*nu);
+            if (nnu.is_zero()) {
+                return NegInf;
+            } else if (is_a_Complex(nnu)) {
+                const ComplexBase &c = down_cast<const ComplexBase &>(nnu);
+                RCP<const Number> real_part = c.real_part();
+                if (real_part->is_zero()) {
+                    // pure imaginary
+                    return Nan;
+                } else {
+                    return ComplexInf;
+                }
+            } else if (eq(nnu, *Inf) or eq(nnu, *NegInf)) {
+                return zero;
+            } else {
+                // nu finite and non-zero
+                return ComplexInf;
+            }
+        }
+    }
+
+
+    // if z.could_extract_minus_sign():
+    //     return (z)**nu*(-z)**(-nu)*besselj(nu, -z)
+    // if nu.is_integer:
+    //     if nu.could_extract_minus_sign():
+    //         return S.NegativeOne**(-nu)*besselj(-nu, z)
+    //     newz = z.extract_multiplicatively(I)
+    //     if newz:  # NOTE we don't want to change the function if z==0
+    //         return I**(nu)*besseli(nu, newz)
+
+    if (could_extract_minus(*z)) {
+        return mul(pow(z, nu),
+                   mul(pow(mul(minus_one, z), mul(minus_one, nu)),
+                       besselj(nu, mul(minus_one, z))));
+    } else if (is_a<Integer>(*nu)) {
+        if (could_extract_minus(*nu)) {
+            return mul(pow(minus_one, mul(minus_one, nu)),
+                       besselj(mul(minus_one, nu), z));
+        }
+
+        // TODO port this:
+        // newz = z.extract_multiplicatively(I)
+        // if newz:  # NOTE we don't want to change the function if z==0
+        //     return I**(nu)*besseli(nu, newz)
+    }
+
+    // TODO port this
+    // # branch handling:
+    // from sympy import unpolarify, exp
+    // if nu.is_integer:
+    //     newz = unpolarify(z)
+    //     if newz != z:
+    //         return besselj(nu, newz)
+    // else:
+    //     newz, n = z.extract_branch_factor()
+    //     if n != 0:
+    //         return exp(2*n*pi*nu*I)*besselj(nu, newz)
+    // nnu = unpolarify(nu)
+    // if nu != nnu:
+    //     return besselj(nnu, z)
+
+    return make_rcp<const BesselY>(nu, z);
 }
 
 Gamma::Gamma(const RCP<const Basic> &arg) : OneArgFunction{arg}

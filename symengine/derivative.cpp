@@ -106,6 +106,19 @@ static bool fdiff(const Ptr<RCP<const Basic>> &ret, const PolyGamma &self,
     }
 }
 
+/* friend */ bool fdiff(const Ptr<RCP<const Basic>> &ret, const BesselBase &self,
+                        unsigned index)
+{
+    if (index == 1) {
+        RCP<const Integer> two = integer(2);
+        *ret = sub(mul(div(self.b(), two), self.create(sub(self.order(), one), self.argument())),
+                   mul(div(self.a(), two), self.create(add(self.order(), one), self.argument())));
+        return true;
+    } else {
+        return false;
+    }
+}
+
 static bool fdiff(const Ptr<RCP<const Basic>> &ret, const Function &self,
                   unsigned index)
 {
@@ -243,6 +256,10 @@ void DiffVisitor::bvisit(const UpperGamma &self)
     result_ = fdiff(self, x, *this);
 }
 void DiffVisitor::bvisit(const PolyGamma &self)
+{
+    result_ = fdiff(self, x, *this);
+}
+void DiffVisitor::bvisit(const BesselBase &self)
 {
     result_ = fdiff(self, x, *this);
 }

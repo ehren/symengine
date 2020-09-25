@@ -72,6 +72,7 @@ public:
     void bvisit(const PolyGamma &self);
     void bvisit(const UpperGamma &self);
     void bvisit(const LowerGamma &self);
+    void bvisit(const BesselBase &self);
     void bvisit(const Zeta &self);
     void bvisit(const LambertW &self);
     void bvisit(const Add &self);
