@@ -2919,7 +2919,8 @@ RCP<const Basic> erfc(const RCP<const Basic> &arg)
 
 template <typename BesselClass,
           RCP<const Basic> (*bessel_create)(const RCP<const Basic> &, const RCP<const Basic> &)>
-static inline RCP<const Basic> bessel_j_or_i(const RCP<const Basic> &nu, const RCP<const Basic> &z, const RCP<const Integer> &a)
+static inline RCP<const Basic> bessel_j_or_i(const RCP<const Basic> &nu, const RCP<const Basic> &z,
+                                             const RCP<const Integer> &a)
 {
     if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
         if (is_a_Number(*nu)) {
@@ -2945,18 +2946,18 @@ static inline RCP<const Basic> bessel_j_or_i(const RCP<const Basic> &nu, const R
             }
         }
     }
-    
+
     if (could_extract_minus(*z)) {
         return mul(pow(z, nu),
                    mul(pow(mul(minus_one, z), mul(minus_one, nu)),
                        bessel_create(nu, mul(minus_one, z))));
     } else if (is_a<Integer>(*nu)) {
         if (could_extract_minus(*nu)) {
-            return mul(pow(mul(minus_one, a), mul(minus_one, nu)), 
+            return mul(pow(mul(minus_one, a), mul(minus_one, nu)),
                        bessel_create(nu, mul(minus_one, z)));
         }
     }
-    
+
     return make_rcp<const BesselClass>(nu, z);
 }
 

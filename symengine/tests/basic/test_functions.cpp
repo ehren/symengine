@@ -3685,15 +3685,49 @@ TEST_CASE("Bessel: functions", "[functions]")
 {
     RCP<const Symbol> n = symbol("n");
     RCP<const Symbol> z = symbol("z");
-    RCP<const Basic> i2 = integer(2);
+    RCP<const Basic> i5 = integer(5);
 
     RCP<const Basic> r1;
     RCP<const Basic> r2;
-    
+
+    // eval
+
+//     for f in [besselj, besseli]:
+//         assert f(0, 0) is S.One
+//         assert f(2.1, 0) is S.Zero
+//         assert f(-3, 0) is S.Zero
+//         assert f(-10.2, 0) is S.ComplexInfinity
+//         assert f(1 + 3*I, 0) is S.Zero
+//         assert f(-3 + I, 0) is S.ComplexInfinity
+//         assert f(-2*I, 0) is S.NaN
+//         assert f(n, 0) != S.One and f(n, 0) != S.Zero
+//         assert f(m, 0) != S.One and f(m, 0) != S.Zero
+//         assert f(k, 0) is S.Zero
+
+    for (const auto & bessel : {SymEngine::besselj, SymEngine::besseli}) {
+        r1 = bessel(zero, zero);
+        r2 = one;
+        REQUIRE(eq(*r1, *r2));
+
+        r1 = bessel(real_double(2.1), zero);
+        r2 = zero;
+        REQUIRE(eq(*r1, *r2));
+
+        r1 = bessel(integer(-3), zero);
+        r2 = zero;
+        REQUIRE(eq(*r1, *r2));
+
+        r1 = bessel(real_double(-10.2), zero);
+        r2 = ComplexInf;
+        REQUIRE(eq(*r1, *r2));
+    }
+
     r1 = bessely(zero, zero);
     r2 = NegInf;
     printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
     REQUIRE(eq(*r1, *r2));
+
+    // derivatives
 
     for (const auto & bessel : {SymEngine::besselj, SymEngine::bessely}) {
 //        r1 = bessel(zero, zero);
@@ -3702,12 +3736,12 @@ TEST_CASE("Bessel: functions", "[functions]")
 //        REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(n, z)->diff(z);
-        r2 = sub(div(bessel(sub(n, one), z), i2), div(bessel(add(n, one), z), i2));
+        r2 = sub(div(bessel(sub(n, one), z), integer(2)), div(bessel(add(n, one), z), integer(2)));
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
-        r1 = bessel(n, mul(z, i2))->diff(z);
-        r2 = mul(sub(div(bessel(sub(n, one), mul(z, i2)), i2), div(bessel(add(n, one), mul(z, i2)), i2)), i2);
+        r1 = bessel(n, mul(z, i5))->diff(z);
+        r2 = mul(i5, sub(div(bessel(sub(n, one), mul(z, i5)), integer(2)), div(bessel(add(n, one), mul(z, i5)), integer(2))));
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
