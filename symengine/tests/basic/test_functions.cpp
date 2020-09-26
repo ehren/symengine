@@ -114,8 +114,10 @@ using SymEngine::Beta;
 using SymEngine::beta;
 using SymEngine::BesselBase;
 using SymEngine::BesselJ;
-using SymEngine::BesselY;
-using SymEngine::BesselI;
+using SymEngine::besselj;
+using SymEngine::bessely;
+using SymEngine::besseli;
+using SymEngine::besselk;
 using SymEngine::abs;
 using SymEngine::Subs;
 using SymEngine::FunctionWrapper;
@@ -3695,7 +3697,7 @@ TEST_CASE("Bessel: functions", "[functions]")
 
     // eval
 
-    for (const auto & bessel : {SymEngine::besselj, SymEngine::besseli}) {
+    for (const auto & bessel : {besselj, besseli}) {
         r1 = bessel(zero, zero);
         r2 = one;
         REQUIRE(eq(*r1, *r2));
@@ -3733,7 +3735,6 @@ TEST_CASE("Bessel: functions", "[functions]")
         REQUIRE(neq(*r1, *zero));
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *nu));
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
-        
     }
 
     r1 = bessely(zero, zero);
@@ -3746,7 +3747,7 @@ TEST_CASE("Bessel: functions", "[functions]")
     printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
     REQUIRE(eq(*r1, *r2));
     
-    for (const auto & bessel : {SymEngine::bessely, SymEngine::besselk}) {
+    for (const auto & bessel : {bessely, besselk}) {
         r1 = bessel(Complex::from_two_nums(*one, *one), zero);
         r2 = ComplexInf;
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
@@ -3762,8 +3763,29 @@ TEST_CASE("Bessel: functions", "[functions]")
     // for f in [besseli, besselk]:
     //     assert f(m, I*S.Infinity) is S.Zero
     //     assert f(m, I*S.NegativeInfinity) is S.Zero
+    
+    
+//    for f in [besseli, besselk]:
+//        assert f(-4, z) == f(4, z)
+//        assert f(-3, z) == f(3, z)
+//        assert f(-n, z) == f(n, z)
+//        assert f(-m, z) != f(m, z)
+    
+    for (const auto & bessel : {besseli, besselk}) {
+        r1 = bessel(integer(-4), z);
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *integer(4)));
+        
+//        r1 = bessel(integer(-3), z);
+//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *integer(3)));
+        
+        // TODO
+        // assert bessel(-symbol_with_int_assumption, z) == bessel(symbol_with_int_assumption, z)
+        
+//        r1 = bessel(mul(minus_one, nu), z);
+//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *mul(minus_one, nu)));
+    }
 
-    for (const auto & bessel : {SymEngine::besselj, SymEngine::bessely, SymEngine::besseli, SymEngine::besselk}) {
+    for (const auto & bessel : {besselj, bessely, besseli, besselk}) {
         r1 = bessel(Nan, zero);
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
@@ -3787,7 +3809,7 @@ TEST_CASE("Bessel: functions", "[functions]")
 
     // derivatives
 
-    for (const auto & bessel : {SymEngine::besselj, SymEngine::bessely}) {
+    for (const auto & bessel : {besselj, bessely}) {
 //        r1 = bessel(zero, zero);
 //        r2 = one;
 //        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());

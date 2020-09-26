@@ -2954,7 +2954,7 @@ static RCP<const Basic> besselji(const RCP<const Basic> &nu, const RCP<const Bas
                        create(nu, mul(minus_one, z))));
     } else if (is_a<Integer>(*nu) and could_extract_minus(*nu)) {
         return mul(pow(mul(minus_one, a), mul(minus_one, nu)),
-                   create(nu, mul(minus_one, z)));
+                   create(mul(minus_one, nu), z));
     }
 
     return make_rcp<const BesselClass>(nu, z);
