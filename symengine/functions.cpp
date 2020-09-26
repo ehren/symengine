@@ -2937,11 +2937,11 @@ static RCP<const Basic> bessel_ji(const RCP<const Basic> &nu, const RCP<const Ba
                 } else if (real_part->is_zero()) {
                     return Nan;
                 } else {
-                    // negative
+                    // real part negative
                     return ComplexInf;
                 }
             } else {
-                // negative
+                // nnu negative
                 return ComplexInf;
             }
         }
@@ -2992,6 +2992,16 @@ RCP<const Basic> besselj(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 
 bool BesselY::is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
 {
+    if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
+        if (is_a_Number(*nu)) {
+            return false;
+        }
+    }
+    
+    if (is_a<Integer>(*nu) and could_extract_minus(*nu)) {
+        return false;
+    }
+    
     return true;
 }
 
@@ -3017,10 +3027,12 @@ RCP<const Basic> bessely(const RCP<const Basic> &nu, const RCP<const Basic> &z)
                 }
             } else if (eq(nnu, *Inf) or eq(nnu, *NegInf)) {
                 return zero;
-            } else {
+            } else if(neq(nnu, *Nan)) {
                 // nu finite and non-zero
-                // what about Nan?
                 return ComplexInf;
+            } else {
+                // unreachable
+                SYMENGINE_ASSERT(false);
             }
         }
     }

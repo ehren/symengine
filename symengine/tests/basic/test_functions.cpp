@@ -3745,12 +3745,18 @@ TEST_CASE("Bessel: functions", "[functions]")
         REQUIRE(neq(*r1, *zero));
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *nu));
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
+        
     }
 
     r1 = bessely(zero, zero);
     r2 = NegInf;
     printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
     REQUIRE(eq(*r1, *r2));
+    
+    r1 = bessely(Nan, zero);
+    printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
+    REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
+    REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
 
     // derivatives
 
