@@ -1352,7 +1352,6 @@ public:
 RCP<const Basic> besseli(const RCP<const Basic> &nu,
                          const RCP<const Basic> &z);
 
-/*
 class BesselK : public BesselBase
 {
 private:
@@ -1382,7 +1381,6 @@ public:
 //! Canonicalize BesselK
 RCP<const Basic> besselk(const RCP<const Basic> &nu,
                          const RCP<const Basic> &z);
-*/
 
 class Abs : public OneArgFunction
 {
