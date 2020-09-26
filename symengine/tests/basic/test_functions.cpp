@@ -3739,7 +3739,7 @@ TEST_CASE("Bessel: functions", "[functions]")
         // TODO when assumptions implemented
         // n_int, k_int = Symbol('n_int', integer=True), Symbol('k_int_nonzero', integer=True, zero=False)
         // assert f(n, 0) != S.One and f(n, 0) != S.Zero  # PASSES (left unevaluated) but should be tested
-        // assert f(k_int_nonzero, 0) is S.Zero  # FAILS
+        // assert f(k_int_nonzero, 0) is S.Zero  # FAILS (needs assumptions)
         r1 = bessel(nu, zero);
         REQUIRE(neq(*r1, *one));
         REQUIRE(neq(*r1, *zero));
@@ -3753,10 +3753,39 @@ TEST_CASE("Bessel: functions", "[functions]")
     printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
     REQUIRE(eq(*r1, *r2));
     
-    r1 = bessely(Nan, zero);
-    printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-    REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
-    REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
+    r1 = besselk(zero, zero);
+    r2 = Inf;
+    printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
+    REQUIRE(eq(*r1, *r2));
+    
+    for (const auto & bessel : {SymEngine::bessely, SymEngine::besselk}) {
+        r1 = bessel(Complex::from_two_nums(*one, *one), zero);
+        r2 = ComplexInf;
+        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
+        REQUIRE(eq(*r1, *r2));
+
+        r1 = bessely(Nan, zero);
+        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
+    }
+
+    for (const auto & bessel : {SymEngine::besselj, SymEngine::bessely, SymEngine::besseli, SymEngine::besselk}) {
+//        r1 = bessel(Nan, zero);
+//        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
+//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
+//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
+        
+//        r1 = bessel(nu, Nan);
+//        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
+//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *nu));
+//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *Nan));
+        
+//        r1 = bessel(Nan, Nan);
+//        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
+//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
+//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *Nan));
+    }
 
     // derivatives
 
