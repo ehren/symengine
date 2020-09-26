@@ -2918,9 +2918,9 @@ RCP<const Basic> erfc(const RCP<const Basic> &arg)
 }
 
 template <typename BesselClass,
-RCP<const Basic> (*create)(const RCP<const Basic> &, const RCP<const Basic> &)>
-static inline RCP<const Basic> bessel_ji(const RCP<const Basic> &nu, const RCP<const Basic> &z,
-                                         const RCP<const Integer> &a)
+          RCP<const Basic> (*create)(const RCP<const Basic> &, const RCP<const Basic> &)>
+static RCP<const Basic> bessel_ji(const RCP<const Basic> &nu, const RCP<const Basic> &z, 
+                                  const RCP<const Integer> &a)
 {
     if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
         if (is_a_Number(*nu)) {
@@ -3011,7 +3011,6 @@ RCP<const Basic> bessely(const RCP<const Basic> &nu, const RCP<const Basic> &z)
                 const ComplexBase &c = down_cast<const ComplexBase &>(nnu);
                 RCP<const Number> real_part = c.real_part();
                 if (real_part->is_zero()) {
-                    // pure imaginary
                     return Nan;
                 } else {
                     return ComplexInf;
@@ -3020,6 +3019,7 @@ RCP<const Basic> bessely(const RCP<const Basic> &nu, const RCP<const Basic> &z)
                 return zero;
             } else {
                 // nu finite and non-zero
+                // what about Nan?
                 return ComplexInf;
             }
         }
