@@ -2992,14 +2992,14 @@ RCP<const Basic> besselj(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 
 template <typename BesselClass,
 RCP<const Basic> (*create)(const RCP<const Basic> &, const RCP<const Basic> &)>
-static RCP<const Basic> bessel_yk(const RCP<const Basic> &nu, const RCP<const Basic> &z,
+static RCP<const Basic> besselyk(const RCP<const Basic> &nu, const RCP<const Basic> &z,
                                   const RCP<const Integer> &b)
 {
     if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
         if (is_a_Number(*nu)) {
             const Number& nnu = down_cast<const Number &>(*nu);
             if (nnu.is_zero()) {
-                return NegInf;
+                return mul(b, NegInf);
             } else if (is_a_Complex(nnu)) {
                 const ComplexBase &c = down_cast<const ComplexBase &>(nnu);
                 RCP<const Number> real_part = c.real_part();
@@ -3008,7 +3008,11 @@ static RCP<const Basic> bessel_yk(const RCP<const Basic> &nu, const RCP<const Ba
                 } else {
                     return ComplexInf;
                 }
-            } else if (eq(nnu, *Inf) or eq(nnu, *NegInf)) {
+            } else if (eq(nnu, *Inf) or eq(nnu, *mul(b, NegInf))
+                       // TODO?:
+                       // or eq(nnu, *mul(sqrt(mul(minus_one, b)), Inf))
+                       // or eq(nnu, *mul(sqrt(mul(minus_one, b)), NegInf)
+                      ) {
                 return zero;
             } else if(neq(nnu, *Nan)) {
                 // nu finite and non-zero
@@ -3056,7 +3060,7 @@ RCP<const Basic> BesselY::create(const RCP<const Basic> &nu, const RCP<const Bas
 RCP<const Basic> bessely(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 {
     RCP<const Integer> &b = one;
-    return bessel_yk<BesselY, bessely>(nu, z, b);
+    return besselyk<BesselY, bessely>(nu, z, b);
 }
 
 bool BesselI::is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const
@@ -3088,7 +3092,7 @@ RCP<const Basic> BesselK::create(const RCP<const Basic> &nu, const RCP<const Bas
 RCP<const Basic> besselk(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 {
     RCP<const Integer> &b = minus_one;
-    return bessel_yk<BesselY, bessely>(nu, z, b);
+    return besselyk<BesselY, bessely>(nu, z, b);
 }
 
 Gamma::Gamma(const RCP<const Basic> &arg) : OneArgFunction{arg}
