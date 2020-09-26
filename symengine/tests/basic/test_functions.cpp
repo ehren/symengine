@@ -3809,6 +3809,13 @@ TEST_CASE("Bessel: functions", "[functions]")
         r1 = bessel(mul(minus_one, nu), z);
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *mul(minus_one, nu)));
     }
+    
+    for (const auto & bessel : {besselj, besseli}) {
+        r1 = bessel(nu, mul(minus_one, z));
+        r2 = mul(pow(mul(minus_one, z), nu), mul(pow(z, mul(minus_one, nu)), bessel(nu, z)));
+        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
+        REQUIRE(eq(*r1, *r2));
+    }
 
     for (const auto & bessel : {besselj, bessely, besseli, besselk}) {
         r1 = bessel(Nan, zero);
@@ -3831,6 +3838,7 @@ TEST_CASE("Bessel: functions", "[functions]")
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *Nan));
     }
+
 
     // derivatives
 
