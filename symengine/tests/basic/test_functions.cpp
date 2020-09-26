@@ -3763,6 +3763,11 @@ TEST_CASE("Bessel: functions", "[functions]")
         r2 = ComplexInf;
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
+        
+        r1 = bessel(Complex::from_two_nums(*zero, *one), zero);
+        r2 = Nan;
+        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
+        REQUIRE(eq(*r1, *r2));
 
         r1 = bessely(Nan, zero);
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
