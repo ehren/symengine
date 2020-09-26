@@ -3093,7 +3093,7 @@ RCP<const Basic> BesselK::create(const RCP<const Basic> &nu, const RCP<const Bas
 RCP<const Basic> besselk(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 {
     RCP<const Integer> &b = minus_one;
-    return besselyk<BesselY, bessely>(nu, z, b);
+    return besselyk<BesselK, besselk>(nu, z, b);
 }
 
 Gamma::Gamma(const RCP<const Basic> &arg) : OneArgFunction{arg}
