@@ -1288,7 +1288,7 @@ public:
                                     const RCP<const Basic> &z) const;
 };
 
-//! Canonicalize Bessel
+//! Canonicalize BesselJ
 RCP<const Basic> besselj(const RCP<const Basic> &nu,
                          const RCP<const Basic> &z);
 
@@ -1305,7 +1305,7 @@ private:
     }
 public:
     IMPLEMENT_TYPEID(SYMENGINE_BESSELY)
-    //! BesselJ Constructor
+    //! BesselY Constructor
     BesselY(const RCP<const Basic> &nu, const RCP<const Basic> &z)
         : BesselBase(nu, z)
     {
@@ -1313,12 +1313,12 @@ public:
         SYMENGINE_ASSERT(is_canonical(nu, z))
     }
     bool is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const;
-    //! \return canonicalized `BesselJ`
+    //! \return canonicalized `BesselY`
     virtual RCP<const Basic> create(const RCP<const Basic> &nu,
                                     const RCP<const Basic> &z) const;
 };
 
-//! Canonicalize Bessel
+//! Canonicalize BesselY
 RCP<const Basic> bessely(const RCP<const Basic> &nu,
                          const RCP<const Basic> &z);
 
@@ -1335,8 +1335,39 @@ private:
     }
 public:
     IMPLEMENT_TYPEID(SYMENGINE_BESSELI)
-    //! BesselJ Constructor
+    //! BesselI Constructor
     BesselI(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+        : BesselBase(nu, z)
+    {
+        SYMENGINE_ASSIGN_TYPEID()
+        SYMENGINE_ASSERT(is_canonical(nu, z))
+    }
+    bool is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const;
+    //! \return canonicalized `BesselI`
+    virtual RCP<const Basic> create(const RCP<const Basic> &nu,
+                                    const RCP<const Basic> &z) const;
+};
+
+//! Canonicalize BesselI
+RCP<const Basic> besseli(const RCP<const Basic> &nu,
+                         const RCP<const Basic> &z);
+
+/*
+class BesselK : public BesselBase
+{
+private:
+    inline virtual RCP<const Integer> a() const final
+    {
+        return minus_one;
+    }
+    inline virtual RCP<const Integer> b() const final
+    {
+        return one;
+    }
+public:
+    IMPLEMENT_TYPEID(SYMENGINE_BESSELK)
+    //! BesselK Constructor
+    BesselK(const RCP<const Basic> &nu, const RCP<const Basic> &z)
         : BesselBase(nu, z)
     {
         SYMENGINE_ASSIGN_TYPEID()
@@ -1348,9 +1379,10 @@ public:
                                     const RCP<const Basic> &z) const;
 };
 
-//! Canonicalize Bessel
-RCP<const Basic> besseli(const RCP<const Basic> &nu,
+//! Canonicalize BesselK
+RCP<const Basic> besselk(const RCP<const Basic> &nu,
                          const RCP<const Basic> &z);
+*/
 
 class Abs : public OneArgFunction
 {
