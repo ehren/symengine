@@ -3732,7 +3732,6 @@ TEST_CASE("Bessel: functions", "[functions]")
     for (const auto& t : { eval_uneval_j, eval_uneval_i }) {
         const auto & eval = std::get<0>(t);
         const auto & uneval = std::get<1>(t);
-        
     }
     
 //    decltype(tup) eval_uneval_ji[] = { tup, tup2 };
@@ -3782,7 +3781,6 @@ TEST_CASE("Bessel: functions", "[functions]")
 //    for (const auto& tup : eval_uneval_ji) {
 //    }
     
-
     for (const auto & bessel : {besselj, besseli}) {
         r1 = bessel(zero, zero);
         r2 = one;
@@ -3811,16 +3809,23 @@ TEST_CASE("Bessel: functions", "[functions]")
         r1 = bessel(Complex::from_two_nums(*zero, *integer(-2)), zero);
         r2 = Nan;
         REQUIRE(eq(*r1, *r2));
+    }
         
+    for (const auto& t : { eval_uneval_j, eval_uneval_i }) {
+        const auto & bessel = std::get<0>(t);
+        const auto & uneval_bessel = std::get<1>(t);
+
         // TODO when assumptions implemented
         // n_int, k_int = Symbol('n_int', integer=True), Symbol('k_int_nonzero', integer=True, zero=False)
         // assert f(n, 0) != S.One and f(n, 0) != S.Zero  # PASSES (left unevaluated) but should be tested
         // assert f(k_int_nonzero, 0) is S.Zero  # FAILS (needs assumptions)
         r1 = bessel(nu, zero);
+        r2 = uneval_bessel(nu, zero);
         REQUIRE(neq(*r1, *one));
         REQUIRE(neq(*r1, *zero));
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *nu));
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
+        REQUIRE(eq(*r1, *r2));
     }
 
     r1 = bessely(zero, zero);
