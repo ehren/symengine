@@ -3695,7 +3695,38 @@ TEST_CASE("Bessel: functions", "[functions]")
     RCP<const Basic> r1;
     RCP<const Basic> r2;
 
+    auto uneval_besselj = [] (const RCP<const Basic> &n, const RCP<const Basic> &z) {
+        return static_cast<RCP<Basic>>(make_rcp<SymEngine::BesselJ>(n, z));
+    };
+    std::function<RCP<const Basic>(const RCP<const Basic> &, const RCP<const Basic> &)> uneval_besself = [] (const RCP<const Basic> &n, const RCP<const Basic> &z) {
+//        return static_cast<RCP<Basic>>(make_rcp<SymEngine::BesselJ>(n, z));
+        return make_rcp<SymEngine::BesselJ>(n, z);
+    };
+    
+//    std::pair<decltype(uneval_besself), decltype(uneval_besself)> a[] =  { {uneval_besself, uneval_besself} };
+    auto a =  std::make_tuple( {uneval_besself, uneval_besself} );
+
+
+    
+    auto uneval_bessely = [] (const RCP<const Basic> &n, const RCP<const Basic> &z) {
+//        return make_rcp<SymEngine::BesselJ>(n, z);
+        return static_cast<RCP<Basic>>(make_rcp<SymEngine::BesselY>(n, z));
+    };
+    auto uneval_besseli = [] (const RCP<const Basic> &n, const RCP<const Basic> &z) {
+//        return make_rcp<SymEngine::BesselJ>(n, z);
+        return static_cast<RCP<Basic>>(make_rcp<SymEngine::BesselI>(n, z));
+    };
+    auto uneval_besselk = [] (const RCP<const Basic> &n, const RCP<const Basic> &z) {
+//        return make_rcp<SymEngine::BesselJ>(n, z);
+        return static_cast<RCP<Basic>>(make_rcp<SymEngine::BesselK>(n, z));
+    };
+//    for (const auto & tup : {std::make_pair(besselj, uneval_besselj), std::make_pair(besseli, uneval_besseli)}) {
+    for (const auto & tup : {{uneval_besself, uneval_besself}}) {
+
     // eval
+    
+//    for (const auto & tup : std::vector(std::make_pair(besselj, uneval_besselj), std::make_pair(besseli, uneval_besseli))) {
+//    }
 
     for (const auto & bessel : {besselj, besseli}) {
         r1 = bessel(zero, zero);
