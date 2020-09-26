@@ -3794,12 +3794,13 @@ TEST_CASE("Bessel: functions", "[functions]")
     
     for (const auto & bessel : {besselj, bessely}) {
         r1 = bessel(integer(-4), z);
-        r2 = mul(minus_one, bessel(integer(4), z));
+        r2 = bessel(integer(4), z);
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(integer(-3), z);
         r2 = mul(minus_one, bessel(integer(3), z));
+        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
         
         // TODO

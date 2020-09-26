@@ -2987,7 +2987,7 @@ RCP<const Basic> BesselJ::create(const RCP<const Basic> &nu, const RCP<const Bas
 
 RCP<const Basic> besselj(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 {
-    RCP<const Integer> &a = minus_one;
+    RCP<const Integer> &a = one;
     return besselji<BesselJ, besselj>(nu, z, a);
 }
 
