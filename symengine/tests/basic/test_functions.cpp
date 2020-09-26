@@ -3782,8 +3782,8 @@ TEST_CASE("Bessel: functions", "[functions]")
         // TODO
         // assert bessel(-symbol_with_int_assumption, z) == bessel(symbol_with_int_assumption, z)
         
-//        r1 = bessel(mul(minus_one, nu), z);
-//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *mul(minus_one, nu)));
+        r1 = bessel(mul(minus_one, nu), z);
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *mul(minus_one, nu)));
     }
 
     for (const auto & bessel : {besselj, bessely, besseli, besselk}) {
