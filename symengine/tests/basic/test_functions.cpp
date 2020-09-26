@@ -3785,6 +3785,29 @@ TEST_CASE("Bessel: functions", "[functions]")
         r1 = bessel(mul(minus_one, nu), z);
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *mul(minus_one, nu)));
     }
+    
+    //    for f in [besselj, bessely]:
+    //        assert f(-4, z) == f(4, z)
+    //        assert f(-3, z) == -f(3, z)
+    //        assert f(-n, z) == (-1)**n*f(n, z)
+    //        assert f(-m, z) != (-1)**m*f(m, z)
+    
+    for (const auto & bessel : {besselj, bessely}) {
+        r1 = bessel(integer(-4), z);
+        r2 = mul(minus_one, bessel(integer(4), z));
+        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
+        REQUIRE(eq(*r1, *r2));
+
+        r1 = bessel(integer(-3), z);
+        r2 = mul(minus_one, bessel(integer(3), z));
+        REQUIRE(eq(*r1, *r2));
+        
+        // TODO
+        // assert f(-sym_with_int_assumption, z) == (-1)**sym_with_int_assumption*f(sym_with_int_assumption, z)
+
+        r1 = bessel(mul(minus_one, nu), z);
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *mul(minus_one, nu)));
+    }
 
     for (const auto & bessel : {besselj, bessely, besseli, besselk}) {
         r1 = bessel(Nan, zero);
