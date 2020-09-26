@@ -3010,8 +3010,8 @@ static RCP<const Basic> besselyk(const RCP<const Basic> &nu, const RCP<const Bas
                 }
             } else if (eq(nnu, *Inf) or eq(nnu, *mul(b, NegInf))
                        // TODO?:
-                       // or eq(nnu, *mul(sqrt(mul(minus_one, b)), Inf))
-                       // or eq(nnu, *mul(sqrt(mul(minus_one, b)), NegInf)
+                       // or eq(nnu, *mul(sqrt(b), Inf))
+                       // or eq(nnu, *mul(sqrt(b), NegInf))
                       ) {
                 return zero;
             } else if(neq(nnu, *Nan)) {
