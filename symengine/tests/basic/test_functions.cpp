@@ -3775,8 +3775,9 @@ TEST_CASE("Bessel: functions", "[functions]")
         r1 = bessel(integer(-4), z);
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *integer(4)));
         
-//        r1 = bessel(integer(-3), z);
-//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *integer(3)));
+        r1 = bessel(integer(-3), z);
+        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *integer(3)));
         
         // TODO
         // assert bessel(-symbol_with_int_assumption, z) == bessel(symbol_with_int_assumption, z)

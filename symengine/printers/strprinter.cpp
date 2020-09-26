@@ -1073,6 +1073,9 @@ std::vector<std::string> init_str_printer_names()
     names[SYMENGINE_POLYGAMMA] = "polygamma";
     names[SYMENGINE_GAMMA] = "gamma";
     names[SYMENGINE_BESSELJ] = "besselj";
+    names[SYMENGINE_BESSELY] = "bessely";
+    names[SYMENGINE_BESSELI] = "besseli";
+    names[SYMENGINE_BESSELK] = "besselk";
     names[SYMENGINE_ABS] = "abs";
     names[SYMENGINE_MAX] = "max";
     names[SYMENGINE_MIN] = "min";

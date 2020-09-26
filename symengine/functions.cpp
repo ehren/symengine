@@ -2994,7 +2994,7 @@ RCP<const Basic> besselj(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 template <typename BesselClass,
 RCP<const Basic> (*create)(const RCP<const Basic> &, const RCP<const Basic> &)>
 static RCP<const Basic> besselyk(const RCP<const Basic> &nu, const RCP<const Basic> &z,
-                                  const RCP<const Integer> &b)
+                                 const RCP<const Integer> &b)
 {
     if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
         if (is_a_Number(*nu)) {
@@ -3026,7 +3026,7 @@ static RCP<const Basic> besselyk(const RCP<const Basic> &nu, const RCP<const Bas
     }
     
     if (is_a<Integer>(*nu) and could_extract_minus(*nu)) {
-        return mul(pow(minus_one, mul(minus_one, nu)),
+        return mul(pow(mul(minus_one, b), mul(minus_one, nu)),
                    create(mul(minus_one, nu), z));
     }
     
