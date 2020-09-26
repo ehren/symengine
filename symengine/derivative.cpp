@@ -106,13 +106,15 @@ static bool fdiff(const Ptr<RCP<const Basic>> &ret, const PolyGamma &self,
     }
 }
 
-/* friend */ bool fdiff(const Ptr<RCP<const Basic>> &ret, const BesselBase &self,
-                        unsigned index)
+/* friend */ bool fdiff(const Ptr<RCP<const Basic>> &ret,
+                        const BesselBase &self, unsigned index)
 {
     if (index == 1) {
         RCP<const Integer> two = integer(2);
-        *ret = sub(mul(div(self.b(), two), self.create(sub(self.order(), one), self.argument())),
-                   mul(div(self.a(), two), self.create(add(self.order(), one), self.argument())));
+        *ret = sub(mul(div(self.b(), two),
+                       self.create(sub(self.order(), one), self.argument())),
+                   mul(div(self.a(), two),
+                       self.create(add(self.order(), one), self.argument())));
         return true;
     } else {
         return false;

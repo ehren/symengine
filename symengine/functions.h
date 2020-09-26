@@ -1243,8 +1243,9 @@ class BesselBase : public TwoArgFunction
 private:
     virtual RCP<const Integer> a() const = 0;
     virtual RCP<const Integer> b() const = 0;
-    friend bool fdiff(const Ptr<RCP<const Basic>> &ret,
-                      const BesselBase &self, unsigned index);
+    friend bool fdiff(const Ptr<RCP<const Basic>> &ret, const BesselBase &self,
+                      unsigned index);
+
 public:
     IMPLEMENT_TYPEID(SYMENGINE_BESSELJ)
     inline RCP<const Basic> order() const
@@ -1273,6 +1274,7 @@ private:
     {
         return one;
     }
+
 public:
     IMPLEMENT_TYPEID(SYMENGINE_BESSELJ)
     //! BesselJ Constructor
@@ -1282,15 +1284,15 @@ public:
         SYMENGINE_ASSIGN_TYPEID()
         SYMENGINE_ASSERT(is_canonical(nu, z))
     }
-    bool is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const;
+    bool is_canonical(const RCP<const Basic> &nu,
+                      const RCP<const Basic> &z) const;
     //! \return canonicalized `BesselJ`
     virtual RCP<const Basic> create(const RCP<const Basic> &nu,
                                     const RCP<const Basic> &z) const;
 };
 
 //! Canonicalize BesselJ
-RCP<const Basic> besselj(const RCP<const Basic> &nu,
-                         const RCP<const Basic> &z);
+RCP<const Basic> besselj(const RCP<const Basic> &nu, const RCP<const Basic> &z);
 
 class BesselY : public BesselBase
 {
@@ -1303,6 +1305,7 @@ private:
     {
         return one;
     }
+
 public:
     IMPLEMENT_TYPEID(SYMENGINE_BESSELY)
     //! BesselY Constructor
@@ -1312,15 +1315,15 @@ public:
         SYMENGINE_ASSIGN_TYPEID()
         SYMENGINE_ASSERT(is_canonical(nu, z))
     }
-    bool is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const;
+    bool is_canonical(const RCP<const Basic> &nu,
+                      const RCP<const Basic> &z) const;
     //! \return canonicalized `BesselY`
     virtual RCP<const Basic> create(const RCP<const Basic> &nu,
                                     const RCP<const Basic> &z) const;
 };
 
 //! Canonicalize BesselY
-RCP<const Basic> bessely(const RCP<const Basic> &nu,
-                         const RCP<const Basic> &z);
+RCP<const Basic> bessely(const RCP<const Basic> &nu, const RCP<const Basic> &z);
 
 class BesselI : public BesselBase
 {
@@ -1333,6 +1336,7 @@ private:
     {
         return one;
     }
+
 public:
     IMPLEMENT_TYPEID(SYMENGINE_BESSELI)
     //! BesselI Constructor
@@ -1342,15 +1346,15 @@ public:
         SYMENGINE_ASSIGN_TYPEID()
         SYMENGINE_ASSERT(is_canonical(nu, z))
     }
-    bool is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const;
+    bool is_canonical(const RCP<const Basic> &nu,
+                      const RCP<const Basic> &z) const;
     //! \return canonicalized `BesselI`
     virtual RCP<const Basic> create(const RCP<const Basic> &nu,
                                     const RCP<const Basic> &z) const;
 };
 
 //! Canonicalize BesselI
-RCP<const Basic> besseli(const RCP<const Basic> &nu,
-                         const RCP<const Basic> &z);
+RCP<const Basic> besseli(const RCP<const Basic> &nu, const RCP<const Basic> &z);
 
 class BesselK : public BesselBase
 {
@@ -1363,6 +1367,7 @@ private:
     {
         return one;
     }
+
 public:
     IMPLEMENT_TYPEID(SYMENGINE_BESSELK)
     //! BesselK Constructor
@@ -1372,15 +1377,15 @@ public:
         SYMENGINE_ASSIGN_TYPEID()
         SYMENGINE_ASSERT(is_canonical(nu, z))
     }
-    bool is_canonical(const RCP<const Basic> &nu, const RCP<const Basic> &z) const;
+    bool is_canonical(const RCP<const Basic> &nu,
+                      const RCP<const Basic> &z) const;
     //! \return canonicalized `BesselJ`
     virtual RCP<const Basic> create(const RCP<const Basic> &nu,
                                     const RCP<const Basic> &z) const;
 };
 
 //! Canonicalize BesselK
-RCP<const Basic> besselk(const RCP<const Basic> &nu,
-                         const RCP<const Basic> &z);
+RCP<const Basic> besselk(const RCP<const Basic> &nu, const RCP<const Basic> &z);
 
 class Abs : public OneArgFunction
 {

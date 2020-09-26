@@ -3697,23 +3697,35 @@ TEST_CASE("Bessel: functions", "[functions]")
 
     RCP<const Basic> r1;
     RCP<const Basic> r2;
-    
-    std::function<RCP<Basic>(const RCP<const Basic> &, const RCP<const Basic> &)> uneval_besselj = [] (const RCP<const Basic> &n, const RCP<const Basic> &z) {
-        return make_rcp<BesselJ>(n, z);
-    };
-    
-    std::function<RCP<Basic>(const RCP<const Basic> &, const RCP<const Basic> &)> uneval_bessely = [] (const RCP<const Basic> &n, const RCP<const Basic> &z) {
-        return make_rcp<BesselY>(n, z);
-    };
 
-    std::function<RCP<Basic>(const RCP<const Basic> &, const RCP<const Basic> &)> uneval_besseli = [] (const RCP<const Basic> &n, const RCP<const Basic> &z) {
-        return make_rcp<BesselI>(n, z);
-    };
-    
-    std::function<RCP<Basic>(const RCP<const Basic> &, const RCP<const Basic> &)> uneval_besselk = [] (const RCP<const Basic> &n, const RCP<const Basic> &z) {
-        return make_rcp<BesselK>(n, z);
-    };
-    
+    std::function<RCP<Basic>(const RCP<const Basic> &,
+                             const RCP<const Basic> &)>
+        uneval_besselj
+        = [](const RCP<const Basic> &n, const RCP<const Basic> &z) {
+              return make_rcp<BesselJ>(n, z);
+          };
+
+    std::function<RCP<Basic>(const RCP<const Basic> &,
+                             const RCP<const Basic> &)>
+        uneval_bessely
+        = [](const RCP<const Basic> &n, const RCP<const Basic> &z) {
+              return make_rcp<BesselY>(n, z);
+          };
+
+    std::function<RCP<Basic>(const RCP<const Basic> &,
+                             const RCP<const Basic> &)>
+        uneval_besseli
+        = [](const RCP<const Basic> &n, const RCP<const Basic> &z) {
+              return make_rcp<BesselI>(n, z);
+          };
+
+    std::function<RCP<Basic>(const RCP<const Basic> &,
+                             const RCP<const Basic> &)>
+        uneval_besselk
+        = [](const RCP<const Basic> &n, const RCP<const Basic> &z) {
+              return make_rcp<BesselK>(n, z);
+          };
+
     printf("%s\n", uneval_bessely(nu, z)->__str__().c_str());
     printf("%s\n", uneval_besselk(nu, z)->__str__().c_str());
 
@@ -3721,8 +3733,8 @@ TEST_CASE("Bessel: functions", "[functions]")
     auto eval_uneval_i = std::make_tuple(besseli, uneval_besseli);
     auto eval_uneval_y = std::make_tuple(bessely, uneval_bessely);
     auto eval_uneval_k = std::make_tuple(besselk, uneval_besselk);
-    
-    for (const auto & bessel : {besselj, besseli}) {
+
+    for (const auto &bessel : {besselj, besseli}) {
         r1 = bessel(zero, zero);
         r2 = one;
         REQUIRE(eq(*r1, *r2));
@@ -3746,97 +3758,99 @@ TEST_CASE("Bessel: functions", "[functions]")
         r1 = bessel(Complex::from_two_nums(*integer(-3), *one), zero);
         r2 = ComplexInf;
         REQUIRE(eq(*r1, *r2));
-        
+
         r1 = bessel(Complex::from_two_nums(*zero, *integer(-2)), zero);
         r2 = Nan;
         REQUIRE(eq(*r1, *r2));
     }
-        
-    for (const auto& t : { eval_uneval_j, eval_uneval_i }) {
-        const auto & bessel = std::get<0>(t);
-        const auto & uneval_bessel = std::get<1>(t);
+
+    for (const auto &t : {eval_uneval_j, eval_uneval_i}) {
+        const auto &bessel = std::get<0>(t);
+        const auto &uneval_bessel = std::get<1>(t);
 
         // TODO when assumptions implemented
-        // n_int, k_int = Symbol('n_int', integer=True), Symbol('k_int_nonzero', integer=True, zero=False)
-        // assert f(n, 0) != S.One and f(n, 0) != S.Zero  # PASSES (left unevaluated) but should be tested
-        // assert f(k_int_nonzero, 0) is S.Zero  # FAILS (needs assumptions)
+        // n_int, k_int = Symbol('n_int', integer=True), Symbol('k_int_nonzero',
+        // integer=True, zero=False) assert f(n, 0) != S.One and f(n, 0) !=
+        // S.Zero  # PASSES (left unevaluated) but should be tested assert
+        // f(k_int_nonzero, 0) is S.Zero  # FAILS (needs assumptions)
         r1 = bessel(nu, zero);
         r2 = uneval_bessel(nu, zero);
         REQUIRE(eq(*r1, *r2));
         REQUIRE(neq(*r1, *one));
         REQUIRE(neq(*r1, *zero));
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *nu));
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *nu));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).argument(), *zero));
     }
 
     r1 = bessely(zero, zero);
     r2 = NegInf;
     printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
     REQUIRE(eq(*r1, *r2));
-    
+
     r1 = besselk(zero, zero);
     r2 = Inf;
     printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
     REQUIRE(eq(*r1, *r2));
-    
-    for (const auto & bessel : {bessely, besselk}) {
+
+    for (const auto &bessel : {bessely, besselk}) {
         r1 = bessel(Complex::from_two_nums(*one, *one), zero);
         r2 = ComplexInf;
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
-        
+
         r1 = bessel(Complex::from_two_nums(*zero, *one), zero);
         r2 = Nan;
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
     }
-    
+
     // TODO? directional complex infinity not in e.g. maple
     // for f in [besseli, besselk]:
     //     assert f(m, I*S.Infinity) is S.Zero
     //     assert f(m, I*S.NegativeInfinity) is S.Zero
-    
-    
-//    for f in [besseli, besselk]:
-//        assert f(-4, z) == f(4, z)
-//        assert f(-3, z) == f(3, z)
-//        assert f(-n, z) == f(n, z)
-//        assert f(-m, z) != f(m, z)
-    
-    for (const auto& t : { eval_uneval_i, eval_uneval_k }) {
-        const auto & bessel = std::get<0>(t);
-        const auto & uneval_bessel = std::get<1>(t);
-        
+
+    //    for f in [besseli, besselk]:
+    //        assert f(-4, z) == f(4, z)
+    //        assert f(-3, z) == f(3, z)
+    //        assert f(-n, z) == f(n, z)
+    //        assert f(-m, z) != f(m, z)
+
+    for (const auto &t : {eval_uneval_i, eval_uneval_k}) {
+        const auto &bessel = std::get<0>(t);
+        const auto &uneval_bessel = std::get<1>(t);
+
         r1 = bessel(integer(-4), z);
         r2 = uneval_bessel(integer(4), z);
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *integer(4)));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *integer(4)));
         REQUIRE(eq(*r1, *r2));
-        
+
         r1 = bessel(integer(-3), z);
         r2 = uneval_bessel(integer(3), z);
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *integer(3)));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *integer(3)));
         REQUIRE(eq(*r1, *r2));
-        
+
         // TODO
-        // assert bessel(-symbol_with_int_assumption, z) == bessel(symbol_with_int_assumption, z)
-        
+        // assert bessel(-symbol_with_int_assumption, z) ==
+        // bessel(symbol_with_int_assumption, z)
+
         r1 = bessel(mul(minus_one, nu), z);
         r2 = uneval_bessel(mul(minus_one, nu), z);
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *mul(minus_one, nu)));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(),
+                   *mul(minus_one, nu)));
         REQUIRE(eq(*r1, *r2));
     }
-    
+
     //    for f in [besselj, bessely]:
     //        assert f(-4, z) == f(4, z)
     //        assert f(-3, z) == -f(3, z)
     //        assert f(-n, z) == (-1)**n*f(n, z)
     //        assert f(-m, z) != (-1)**m*f(m, z)
-    
-    for (const auto& t : { eval_uneval_j, eval_uneval_y }) {
-        const auto & bessel = std::get<0>(t);
-        const auto & uneval_bessel = std::get<1>(t);
-        
+
+    for (const auto &t : {eval_uneval_j, eval_uneval_y}) {
+        const auto &bessel = std::get<0>(t);
+        const auto &uneval_bessel = std::get<1>(t);
+
         r1 = bessel(integer(-4), z);
         r2 = uneval_bessel(integer(4), z);
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
@@ -3846,75 +3860,82 @@ TEST_CASE("Bessel: functions", "[functions]")
         r2 = mul(minus_one, uneval_bessel(integer(3), z));
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
-        
+
         // TODO
-        // assert f(-sym_with_int_assumption, z) == (-1)**sym_with_int_assumption*f(sym_with_int_assumption, z)
+        // assert f(-sym_with_int_assumption, z) ==
+        // (-1)**sym_with_int_assumption*f(sym_with_int_assumption, z)
 
         r1 = bessel(mul(minus_one, nu), z);
         r2 = uneval_bessel(mul(minus_one, nu), z);
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *mul(minus_one, nu)));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(),
+                   *mul(minus_one, nu)));
         REQUIRE(eq(*r1, *r2));
     }
-    
-    for (const auto& t : { eval_uneval_j, eval_uneval_i }) {
-        const auto & bessel = std::get<0>(t);
-        const auto & uneval_bessel = std::get<1>(t);
+
+    for (const auto &t : {eval_uneval_j, eval_uneval_i}) {
+        const auto &bessel = std::get<0>(t);
+        const auto &uneval_bessel = std::get<1>(t);
         r1 = bessel(nu, mul(minus_one, z));
-        r2 = mul(pow(mul(minus_one, z), nu), mul(pow(z, mul(minus_one, nu)), uneval_bessel(nu, z)));
+        r2 = mul(pow(mul(minus_one, z), nu),
+                 mul(pow(z, mul(minus_one, nu)), uneval_bessel(nu, z)));
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
     }
 
-    for (const auto& t : { eval_uneval_j, eval_uneval_y, eval_uneval_i, eval_uneval_k }) {
-        // some of these should perhaps give Nan (but this matches current SymPy)
-        
-        const auto & bessel = std::get<0>(t);
-        const auto & uneval_bessel = std::get<1>(t);
-        
+    for (const auto &t :
+         {eval_uneval_j, eval_uneval_y, eval_uneval_i, eval_uneval_k}) {
+        // some of these should perhaps give Nan (but this matches current
+        // SymPy)
+
+        const auto &bessel = std::get<0>(t);
+        const auto &uneval_bessel = std::get<1>(t);
+
         r1 = bessel(Nan, zero);
         r2 = uneval_bessel(Nan, zero);
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *Nan));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).argument(), *zero));
         REQUIRE(eq(*r1, *r2));
-        
+
         r1 = bessel(nu, Nan);
         r2 = uneval_bessel(nu, Nan);
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *nu));
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *Nan));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *nu));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).argument(), *Nan));
         REQUIRE(eq(*r1, *r2));
-        
+
         r1 = bessel(Nan, z);
         r2 = uneval_bessel(Nan, z);
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *z));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *Nan));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).argument(), *z));
         REQUIRE(eq(*r1, *r2));
-        
+
         r1 = bessel(Nan, Nan);
         r2 = bessel(Nan, Nan);
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
-        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *Nan));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *Nan));
+        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).argument(), *Nan));
         REQUIRE(eq(*r1, *r2));
     }
 
     // derivatives
 
-    for (const auto & bessel : {besselj, bessely}) {
-//        r1 = bessel(zero, zero);
-//        r2 = one;
-//        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
-//        REQUIRE(eq(*r1, *r2));
+    for (const auto &bessel : {besselj, bessely}) {
+        //        r1 = bessel(zero, zero);
+        //        r2 = one;
+        //        printf("%s %s\n", r1->__str__().c_str(),
+        //        r2->__str__().c_str()); REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(nu, z)->diff(z);
-        r2 = sub(div(bessel(sub(nu, one), z), integer(2)), div(bessel(add(nu, one), z), integer(2)));
+        r2 = sub(div(bessel(sub(nu, one), z), integer(2)),
+                 div(bessel(add(nu, one), z), integer(2)));
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(nu, mul(z, i5))->diff(z);
-        r2 = mul(i5, sub(div(bessel(sub(nu, one), mul(z, i5)), integer(2)), div(bessel(add(nu, one), mul(z, i5)), integer(2))));
+        r2 = mul(i5, sub(div(bessel(sub(nu, one), mul(z, i5)), integer(2)),
+                         div(bessel(add(nu, one), mul(z, i5)), integer(2))));
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
@@ -3923,7 +3944,6 @@ TEST_CASE("Bessel: functions", "[functions]")
         printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
     }
-
 }
 
 TEST_CASE("Abs: functions", "[functions]")
