@@ -3695,18 +3695,6 @@ TEST_CASE("Bessel: functions", "[functions]")
 
     // eval
 
-//     for f in [besselj, besseli]:
-//         assert f(0, 0) is S.One
-//         assert f(2.1, 0) is S.Zero
-//         assert f(-3, 0) is S.Zero
-//         assert f(-10.2, 0) is S.ComplexInfinity
-//         assert f(1 + 3*I, 0) is S.Zero
-//         assert f(-3 + I, 0) is S.ComplexInfinity
-//         assert f(-2*I, 0) is S.NaN
-//         assert f(n, 0) != S.One and f(n, 0) != S.Zero
-//         assert f(m, 0) != S.One and f(m, 0) != S.Zero
-//         assert f(k, 0) is S.Zero
-
     for (const auto & bessel : {SymEngine::besselj, SymEngine::besseli}) {
         r1 = bessel(zero, zero);
         r2 = one;
@@ -3768,28 +3756,33 @@ TEST_CASE("Bessel: functions", "[functions]")
         r2 = Nan;
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
+    }
+    
+    // TODO? directional complex infinity not in e.g. maple
+    // for f in [besseli, besselk]:
+    //     assert f(m, I*S.Infinity) is S.Zero
+    //     assert f(m, I*S.NegativeInfinity) is S.Zero
 
-        r1 = bessely(Nan, zero);
+    for (const auto & bessel : {SymEngine::besselj, SymEngine::bessely, SymEngine::besseli, SymEngine::besselk}) {
+        r1 = bessel(Nan, zero);
         printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
         REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
-    }
-
-    for (const auto & bessel : {SymEngine::besselj, SymEngine::bessely, SymEngine::besseli, SymEngine::besselk}) {
-//        r1 = bessel(Nan, zero);
-//        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
-//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *zero));
         
-//        r1 = bessel(nu, Nan);
-//        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *nu));
-//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *Nan));
+        r1 = bessel(nu, Nan);
+        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *nu));
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *Nan));
         
-//        r1 = bessel(Nan, Nan);
-//        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
-//        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *Nan));
+        r1 = bessel(Nan, z);
+        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *z));
+        
+        r1 = bessel(Nan, Nan);
+        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).order(), *Nan));
+        REQUIRE(eq(*down_cast<const BesselBase&>(*r1).argument(), *Nan));
     }
 
     // derivatives

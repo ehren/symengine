@@ -2927,6 +2927,8 @@ static RCP<const Basic> besselji(const RCP<const Basic> &nu, const RCP<const Bas
             const Number& nnu = down_cast<const Number &>(*nu);
             if (nnu.is_zero()) {
                 return one;
+            } else if (eq(nnu, *Inf) or eq(nnu, *NegInf) or eq(nnu, *ComplexInf) or eq(nnu, *Nan)) {
+                // unevaluated
             } else if (is_a<Integer>(nnu) or nnu.is_positive()) {
                 return zero;
             } else if (is_a_Complex(nnu)) {
@@ -2937,11 +2939,10 @@ static RCP<const Basic> besselji(const RCP<const Basic> &nu, const RCP<const Bas
                 } else if (real_part->is_zero()) {
                     return Nan;
                 } else {
-                    // real part negative
                     return ComplexInf;
                 }
             } else {
-                // nnu negative
+                SYMENGINE_ASSERT(nnu.is_negative());
                 return ComplexInf;
             }
         }
@@ -3009,7 +3010,7 @@ static RCP<const Basic> besselyk(const RCP<const Basic> &nu, const RCP<const Bas
                     return ComplexInf;
                 }
             } else if (eq(nnu, *Inf) or eq(nnu, *mul(b, NegInf))
-                       // TODO?:
+                       // TODO? directional complex infinity not in e.g. maple
                        // or eq(nnu, *mul(sqrt(b), Inf))
                        // or eq(nnu, *mul(sqrt(b), NegInf))
                       ) {
