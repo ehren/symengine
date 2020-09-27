@@ -3760,15 +3760,15 @@ TEST_CASE("Bessel: functions", "[functions]")
         REQUIRE(eq(*r1, *r2));
     }
 
+    // TODO when assumptions implemented
+    // n_i = Symbol('n_i',integer=True)
+    // k_i = Symbol('k_i',integer=True, zero=False)
+    // assert f(n_i, 0) != S.One and f(n_i, 0) != S.Zero  # // PASSES trivially
+    // assert f(k_i, 0) is S.Zero  # FAILS (needs assumptions)
+
     for (const auto &t : {eval_uneval_j, eval_uneval_i}) {
         const auto &bessel = std::get<0>(t);
         const auto &uneval_bessel = std::get<1>(t);
-
-        // TODO when assumptions implemented
-        // n_int, k_int = Symbol('n_int', integer=True), Symbol('k_int_nonzero',
-        // integer=True, zero=False) assert f(n, 0) != S.One and f(n, 0) !=
-        // S.Zero  # PASSES (left unevaluated) but should be tested assert
-        // f(k_int_nonzero, 0) is S.Zero  # FAILS (needs assumptions)
 
         r1 = bessel(nu, zero);
         r2 = uneval_bessel(nu, zero);
