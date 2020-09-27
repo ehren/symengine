@@ -3875,6 +3875,7 @@ TEST_CASE("Bessel: functions", "[functions]")
     for (const auto &t : {eval_uneval_j, eval_uneval_i}) {
         const auto &bessel = std::get<0>(t);
         const auto &uneval_bessel = std::get<1>(t);
+
         r1 = bessel(nu, mul(minus_one, z));
         r2 = mul(pow(mul(minus_one, z), nu),
                  mul(pow(z, mul(minus_one, nu)), uneval_bessel(nu, z)));
@@ -3884,11 +3885,11 @@ TEST_CASE("Bessel: functions", "[functions]")
 
     for (const auto &t :
          {eval_uneval_j, eval_uneval_y, eval_uneval_i, eval_uneval_k}) {
-        // some of these should perhaps give Nan (but this matches current
-        // SymPy)
-
         const auto &bessel = std::get<0>(t);
         const auto &uneval_bessel = std::get<1>(t);
+
+        // some of these should perhaps give Nan (but this matches current
+        // SymPy)
 
         r1 = bessel(Nan, zero);
         r2 = uneval_bessel(Nan, zero);
