@@ -3725,9 +3725,6 @@ TEST_CASE("Bessel: functions", "[functions]")
               return make_rcp<BesselK>(n, z);
           };
 
-    printf("%s\n", uneval_bessely(nu, z)->__str__().c_str());
-    printf("%s\n", uneval_besselk(nu, z)->__str__().c_str());
-
     auto eval_uneval_j = std::make_tuple(besselj, uneval_besselj);
     auto eval_uneval_i = std::make_tuple(besseli, uneval_besseli);
     auto eval_uneval_y = std::make_tuple(bessely, uneval_bessely);
@@ -3783,23 +3780,19 @@ TEST_CASE("Bessel: functions", "[functions]")
 
     r1 = bessely(zero, zero);
     r2 = NegInf;
-    printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
     REQUIRE(eq(*r1, *r2));
 
     r1 = besselk(zero, zero);
     r2 = Inf;
-    printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
     REQUIRE(eq(*r1, *r2));
 
     for (const auto &bessel : {bessely, besselk}) {
         r1 = bessel(Complex::from_two_nums(*one, *one), zero);
         r2 = ComplexInf;
-        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(Complex::from_two_nums(*zero, *one), zero);
         r2 = Nan;
-        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
     }
 
@@ -3852,12 +3845,10 @@ TEST_CASE("Bessel: functions", "[functions]")
 
         r1 = bessel(integer(-4), z);
         r2 = uneval_bessel(integer(4), z);
-        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(integer(-3), z);
         r2 = mul(minus_one, uneval_bessel(integer(3), z));
-        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
         // TODO
@@ -3878,7 +3869,6 @@ TEST_CASE("Bessel: functions", "[functions]")
         r1 = bessel(nu, mul(minus_one, z));
         r2 = mul(pow(mul(minus_one, z), nu),
                  mul(pow(z, mul(minus_one, nu)), uneval_bessel(nu, z)));
-        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
     }
 
