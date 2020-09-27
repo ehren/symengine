@@ -3807,19 +3807,12 @@ TEST_CASE("Bessel: functions", "[functions]")
     //     assert f(m, I*S.Infinity) is S.Zero
     //     assert f(m, I*S.NegativeInfinity) is S.Zero
 
-    //    for f in [besseli, besselk]:
-    //        assert f(-4, z) == f(4, z)
-    //        assert f(-3, z) == f(3, z)
-    //        assert f(-n, z) == f(n, z)
-    //        assert f(-m, z) != f(m, z)
-
     for (const auto &t : {eval_uneval_i, eval_uneval_k}) {
         const auto &bessel = std::get<0>(t);
         const auto &uneval_bessel = std::get<1>(t);
 
         r1 = bessel(integer(-4), z);
         r2 = uneval_bessel(integer(4), z);
-        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *integer(4)));
         REQUIRE(eq(*r1, *r2));
 
@@ -3839,12 +3832,6 @@ TEST_CASE("Bessel: functions", "[functions]")
         REQUIRE(eq(*r1, *r2));
     }
 
-    //    for f in [besselj, bessely]:
-    //        assert f(-4, z) == f(4, z)
-    //        assert f(-3, z) == -f(3, z)
-    //        assert f(-n, z) == (-1)**n*f(n, z)
-    //        assert f(-m, z) != (-1)**m*f(m, z)
-
     for (const auto &t : {eval_uneval_j, eval_uneval_y}) {
         const auto &bessel = std::get<0>(t);
         const auto &uneval_bessel = std::get<1>(t);
@@ -3858,8 +3845,8 @@ TEST_CASE("Bessel: functions", "[functions]")
         REQUIRE(eq(*r1, *r2));
 
         // TODO
-        // assert f(-sym_with_int_assumption, z) ==
-        // (-1)**sym_with_int_assumption*f(sym_with_int_assumption, z)
+        // assert bessel(-sym_with_int_assumption, z) ==
+        // (-1)**sym_with_int_assumption*bessel(sym_with_int_assumption, z)
 
         r1 = bessel(mul(minus_one, nu), z);
         r2 = uneval_bessel(mul(minus_one, nu), z);
@@ -3868,9 +3855,6 @@ TEST_CASE("Bessel: functions", "[functions]")
         REQUIRE(eq(*r1, *r2));
     }
 
-    //    assert besseli(2, -z) == besseli(2, z)
-    //    assert besseli(3, -z) == -besseli(3, z)
-
     r1 = besseli(integer(2), mul(minus_one, z));
     r2 = uneval_besseli(integer(2), z);
     REQUIRE(eq(*r1, *r2));
@@ -3878,10 +3862,6 @@ TEST_CASE("Bessel: functions", "[functions]")
     r1 = besseli(integer(3), mul(minus_one, z));
     r2 = mul(minus_one, uneval_besseli(integer(3), z));
     REQUIRE(eq(*r1, *r2));
-
-    //
-    //    assert besselj(0, -z) == besselj(0, z)
-    //    assert besselj(1, -z) == -besselj(1, z)
 
     r1 = besselj(zero, mul(minus_one, z));
     r2 = uneval_besselj(zero, z);
