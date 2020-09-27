@@ -3891,13 +3891,16 @@ TEST_CASE("Bessel: functions", "[functions]")
     r2 = mul(minus_one, uneval_besselj(one, z));
     REQUIRE(eq(*r1, *r2));
 
-    //
-    //    assert besseli(0, I*z) == besselj(0, z)
-    //    assert besseli(1, I*z) == I*besselj(1, z)
-    //    assert besselj(3, I*z) == -I*besseli(3, z)
-
     r1 = besseli(zero, mul(I, z));
     r2 = uneval_besselj(zero, z);
+    REQUIRE(eq(*r1, *r2));
+
+    r1 = besseli(one, mul(I, z));
+    r2 = mul(I, uneval_besselj(one, z));
+    REQUIRE(eq(*r1, *r2));
+
+    r1 = besselj(integer(3), mul(I, z));
+    r2 = mul(mul(minus_one, I), uneval_besseli(integer(3), z));
     REQUIRE(eq(*r1, *r2));
 
     for (const auto &t :
