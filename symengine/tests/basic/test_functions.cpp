@@ -3769,6 +3769,7 @@ TEST_CASE("Bessel: functions", "[functions]")
         // integer=True, zero=False) assert f(n, 0) != S.One and f(n, 0) !=
         // S.Zero  # PASSES (left unevaluated) but should be tested assert
         // f(k_int_nonzero, 0) is S.Zero  # FAILS (needs assumptions)
+
         r1 = bessel(nu, zero);
         r2 = uneval_bessel(nu, zero);
         REQUIRE(eq(*r1, *r2));
@@ -3776,6 +3777,11 @@ TEST_CASE("Bessel: functions", "[functions]")
         REQUIRE(neq(*r1, *zero));
         REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *nu));
         REQUIRE(eq(*down_cast<const BesselBase &>(*r1).argument(), *zero));
+
+        r1 = bessel(nu, mul(minus_one, z));
+        r2 = mul(pow(mul(minus_one, z), nu),
+                 mul(pow(z, mul(minus_one, nu)), uneval_bessel(nu, z)));
+        REQUIRE(eq(*r1, *r2));
     }
 
     r1 = bessely(zero, zero);
@@ -3862,15 +3868,38 @@ TEST_CASE("Bessel: functions", "[functions]")
         REQUIRE(eq(*r1, *r2));
     }
 
-    for (const auto &t : {eval_uneval_j, eval_uneval_i}) {
-        const auto &bessel = std::get<0>(t);
-        const auto &uneval_bessel = std::get<1>(t);
+    //    assert besseli(2, -z) == besseli(2, z)
+    //    assert besseli(3, -z) == -besseli(3, z)
 
-        r1 = bessel(nu, mul(minus_one, z));
-        r2 = mul(pow(mul(minus_one, z), nu),
-                 mul(pow(z, mul(minus_one, nu)), uneval_bessel(nu, z)));
-        REQUIRE(eq(*r1, *r2));
-    }
+    r1 = besseli(integer(2), mul(minus_one, z));
+    r2 = uneval_besseli(integer(2), z);
+    REQUIRE(eq(*r1, *r2));
+
+    r1 = besseli(integer(3), mul(minus_one, z));
+    r2 = mul(minus_one, uneval_besseli(integer(3), z));
+    REQUIRE(eq(*r1, *r2));
+
+    //
+    //    assert besselj(0, -z) == besselj(0, z)
+    //    assert besselj(1, -z) == -besselj(1, z)
+
+    r1 = besselj(zero, mul(minus_one, z));
+    r2 = uneval_besselj(zero, z);
+    REQUIRE(eq(*r1, *r2));
+
+    r1 = besselj(one, mul(minus_one, z));
+    r2 = mul(minus_one, uneval_besselj(one, z));
+    REQUIRE(eq(*r1, *r2));
+
+    //
+    //    assert besseli(0, I*z) == besselj(0, z)
+    //    assert besseli(1, I*z) == I*besselj(1, z)
+    //    assert besselj(3, I*z) == -I*besseli(3, z)
+
+    r1 = besseli(zero, mul(I, z));
+    r2 = besselj(zero, z);
+    printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
+//    REQUIRE(eq(*r1, *r2));
 
     for (const auto &t :
          {eval_uneval_j, eval_uneval_y, eval_uneval_i, eval_uneval_k}) {
