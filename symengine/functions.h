@@ -1247,7 +1247,7 @@ private:
                       unsigned index);
 
 public:
-    IMPLEMENT_TYPEID(SYMENGINE_BESSELJ)
+    IMPLEMENT_TYPEID(SYMENGINE_BESSELBASE)
     inline RCP<const Basic> order() const
     {
         return get_arg1();
