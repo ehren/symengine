@@ -391,7 +391,7 @@ extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic> &c)
         const Mul &m = down_cast<const Mul &>(*arg);
         vec_basic args = m.get_args();
         bool succeeded = false;
-        
+
         for (std::size_t i = 0; i < args.size(); ++i) {
             RCP<const Basic> &a = args[i];
 
@@ -403,7 +403,7 @@ extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic> &c)
                 succeeded = true;
             }
         }
-        
+
         if (succeeded) {
             return std::make_tuple(true, mul(args));
         }
