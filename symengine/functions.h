@@ -1361,11 +1361,11 @@ class BesselK : public BesselBase
 private:
     inline virtual RCP<const Integer> a() const final
     {
-        return minus_one;
+        return one;
     }
     inline virtual RCP<const Integer> b() const final
     {
-        return one;
+        return minus_one;
     }
 
 public:

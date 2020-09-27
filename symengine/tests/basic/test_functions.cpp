@@ -3911,23 +3911,55 @@ TEST_CASE("Bessel: functions", "[functions]")
     // derivatives
     RCP<const Basic> i5 = integer(5);
 
-    for (const auto &bessel : {besselj, bessely}) {
+    for (const auto &t : {eval_uneval_j, eval_uneval_y}) {
+        const auto &bessel = std::get<0>(t);
+        const auto &uneval_bessel = std::get<1>(t);
 
         r1 = bessel(nu, z)->diff(z);
         r2 = sub(div(bessel(sub(nu, one), z), integer(2)),
                  div(bessel(add(nu, one), z), integer(2)));
-        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(nu, mul(z, i5))->diff(z);
         r2 = mul(i5, sub(div(bessel(sub(nu, one), mul(z, i5)), integer(2)),
                          div(bessel(add(nu, one), mul(z, i5)), integer(2))));
-        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
         REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(nu, z)->diff(nu);
         r2 = Derivative::create(bessel(nu, z), {nu});
-        printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
+        REQUIRE(eq(*r1, *r2));
+    }
+
+    r1 = besseli(nu, z)->diff(z);
+    r2 = add(div(uneval_besseli(sub(nu, one), z), integer(2)),
+             div(uneval_besseli(add(nu, one), z), integer(2)));
+    REQUIRE(eq(*r1, *r2));
+
+    r1 = besseli(nu, mul(z, i5))->diff(z);
+    r2 = mul(i5,
+             add(div(uneval_besseli(sub(nu, one), mul(z, i5)), integer(2)),
+                 div(uneval_besseli(add(nu, one), mul(z, i5)), integer(2))));
+    REQUIRE(eq(*r1, *r2));
+
+    r1 = besselk(nu, z)->diff(z);
+    r2 = sub(mul(minus_one, div(uneval_besselk(sub(nu, one), z), integer(2))),
+             div(uneval_besselk(add(nu, one), z), integer(2)));
+    REQUIRE(eq(*r1, *r2));
+
+    r1 = besselk(nu, mul(z, i5))->diff(z);
+    r2 = mul(i5,
+             sub(mul(minus_one,
+                     div(uneval_besselk(sub(nu, one), mul(z, i5)), integer(2))),
+                 div(uneval_besselk(add(nu, one), mul(z, i5)), integer(2))));
+    REQUIRE(eq(*r1, *r2));
+
+    for (const auto &t :
+         {eval_uneval_j, eval_uneval_y, eval_uneval_i, eval_uneval_k}) {
+        const auto &bessel = std::get<0>(t);
+        const auto &uneval_bessel = std::get<1>(t);
+
+        r1 = bessel(nu, z)->diff(nu);
+        r2 = Derivative::create(uneval_bessel(nu, z), {nu});
         REQUIRE(eq(*r1, *r2));
     }
 }
