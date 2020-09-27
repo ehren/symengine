@@ -91,6 +91,15 @@ bool Conjugate::is_canonical(const RCP<const Basic> &arg) const
         or is_a<Beta>(*arg)) {
         return false;
     }
+    // correct?
+    if (is_a<BesselBase>(*arg)) {
+        const BesselBase &bb = down_cast<const BesselBase &>(*arg);
+        if (is_a_Number(*bb.argument())
+            and not down_cast<const Number &>(*bb.argument()).is_negative()) {
+            return false;
+        }
+    }
+
     // MultiArgFunction class
     if (is_a<LeviCivita>(*arg)) {
         return false;
@@ -345,6 +354,62 @@ bool handle_minus(const RCP<const Basic> &arg,
     }
     *rarg = arg;
     return false;
+}
+
+// \returns (true, extraction) if `c` could be extracted from `arg` in a nice
+// way otherwise (false, arg)
+// TODO: handle more than just `Mul`
+static std::tuple<bool, RCP<const Basic>>
+extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic> &c)
+{
+    if (eq(*arg, *c)) {
+        return std::make_tuple(true, one);
+    } else if (eq(*c, *one)) {
+        return std::make_tuple(true, arg);
+    } else if (eq(*arg, *Nan)) {
+        return std::make_tuple(false, arg);
+    }
+
+    if (is_a<Mul>(*c)) {
+        const Mul &m = down_cast<const Mul &>(*c);
+
+        RCP<const Basic> a, b;
+        m.as_two_terms(outArg(a), outArg(b));
+
+        bool success;
+        RCP<const Basic> x;
+        std::tie(success, x) = extract_multiplicatively(arg, a);
+
+        if (success) {
+            return extract_multiplicatively(x, b);
+        } else {
+            return std::make_tuple(false, arg);
+        }
+    }
+
+    if (is_a<Mul>(*arg)) {
+        const Mul &m = down_cast<const Mul &>(*arg);
+        vec_basic args = m.get_args();
+        bool succeeded = false;
+        
+        for (std::size_t i = 0; i < args.size(); ++i) {
+            RCP<const Basic> &a = args[i];
+
+            bool success;
+            RCP<const Basic> x;
+            std::tie(success, x) = extract_multiplicatively(a, c);
+            if (success) {
+                args[i] = x;
+                succeeded = true;
+            }
+        }
+        
+        if (succeeded) {
+            return std::make_tuple(true, mul(args));
+        }
+    }
+
+    return std::make_tuple(false, arg);
 }
 
 // \return true if conjugate has to be returned finally else false
@@ -2918,11 +2983,13 @@ RCP<const Basic> erfc(const RCP<const Basic> &arg)
 }
 
 template <typename BesselClass,
-          RCP<const Basic> (*create)(const RCP<const Basic> &,
-                                     const RCP<const Basic> &)>
-static RCP<const Basic> besselji(const RCP<const Basic> &nu,
-                                 const RCP<const Basic> &z,
-                                 const RCP<const Integer> &a)
+          RCP<const Basic> (*bessel)(const RCP<const Basic> &,
+                                     const RCP<const Basic> &),
+          RCP<const Basic> (*modified_opposite)(const RCP<const Basic> &,
+                                                const RCP<const Basic> &)>
+static RCP<const Basic> bessel_first_kind(const RCP<const Basic> &nu,
+                                          const RCP<const Basic> &z,
+                                          const RCP<const Integer> &a)
 {
     if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
         if (is_a_Number(*nu)) {
@@ -2953,10 +3020,20 @@ static RCP<const Basic> besselji(const RCP<const Basic> &nu,
 
     if (could_extract_minus(*z)) {
         return mul(pow(z, nu), mul(pow(mul(minus_one, z), mul(minus_one, nu)),
-                                   create(nu, mul(minus_one, z))));
-    } else if (is_a<Integer>(*nu) and could_extract_minus(*nu)) {
-        return mul(pow(mul(minus_one, a), mul(minus_one, nu)),
-                   create(mul(minus_one, nu), z));
+                                   bessel(nu, mul(minus_one, z))));
+    } else if (is_a<Integer>(*nu)) {
+        if (could_extract_minus(*nu)) {
+            return mul(pow(mul(minus_one, a), mul(minus_one, nu)),
+                       bessel(mul(minus_one, nu), z));
+        } else {
+            bool success;
+            RCP<const Basic> newz;
+            std::tie(success, newz) = extract_multiplicatively(z, I);
+            if (success and neq(*newz, *zero)) {
+                return mul(pow(I, mul(a, nu)),
+                           modified_opposite(nu, mul(a, newz)));
+            }
+        }
     }
 
     return make_rcp<const BesselClass>(nu, z);
@@ -2993,7 +3070,7 @@ RCP<const Basic> BesselJ::create(const RCP<const Basic> &nu,
 RCP<const Basic> besselj(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 {
     RCP<const Integer> &a = one;
-    return besselji<BesselJ, besselj>(nu, z, a);
+    return bessel_first_kind<BesselJ, besselj, besseli>(nu, z, a);
 }
 
 template <typename BesselClass,
@@ -3089,7 +3166,7 @@ RCP<const Basic> BesselI::create(const RCP<const Basic> &nu,
 RCP<const Basic> besseli(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 {
     RCP<const Integer> &a = minus_one;
-    return besselji<BesselI, besseli>(nu, z, a);
+    return bessel_first_kind<BesselI, besseli, besselj>(nu, z, a);
 }
 
 bool BesselK::is_canonical(const RCP<const Basic> &nu,

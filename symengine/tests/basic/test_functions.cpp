@@ -3897,9 +3897,8 @@ TEST_CASE("Bessel: functions", "[functions]")
     //    assert besselj(3, I*z) == -I*besseli(3, z)
 
     r1 = besseli(zero, mul(I, z));
-    r2 = besselj(zero, z);
-    printf("%s %s\n", r1->__str__().c_str(), r2->__str__().c_str());
-//    REQUIRE(eq(*r1, *r2));
+    r2 = uneval_besselj(zero, z);
+    REQUIRE(eq(*r1, *r2));
 
     for (const auto &t :
          {eval_uneval_j, eval_uneval_y, eval_uneval_i, eval_uneval_k}) {
