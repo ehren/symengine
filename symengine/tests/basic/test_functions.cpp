@@ -3693,7 +3693,6 @@ TEST_CASE("Bessel: functions", "[functions]")
 {
     RCP<const Symbol> nu = symbol("nu");
     RCP<const Symbol> z = symbol("z");
-    RCP<const Basic> i5 = integer(5);
 
     RCP<const Basic> r1;
     RCP<const Basic> r2;
@@ -3893,40 +3892,25 @@ TEST_CASE("Bessel: functions", "[functions]")
 
         r1 = bessel(Nan, zero);
         r2 = uneval_bessel(Nan, zero);
-        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *Nan));
-        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).argument(), *zero));
         REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(nu, Nan);
         r2 = uneval_bessel(nu, Nan);
-        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *nu));
-        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).argument(), *Nan));
         REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(Nan, z);
         r2 = uneval_bessel(Nan, z);
-        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *Nan));
-        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).argument(), *z));
         REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(Nan, Nan);
-        r2 = bessel(Nan, Nan);
-        printf("%s %s\n", r1->__str__().c_str(), r1->__str__().c_str());
-        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).order(), *Nan));
-        REQUIRE(eq(*down_cast<const BesselBase &>(*r1).argument(), *Nan));
+        r2 = uneval_bessel(Nan, Nan);
         REQUIRE(eq(*r1, *r2));
     }
 
     // derivatives
+    RCP<const Basic> i5 = integer(5);
 
     for (const auto &bessel : {besselj, bessely}) {
-        //        r1 = bessel(zero, zero);
-        //        r2 = one;
-        //        printf("%s %s\n", r1->__str__().c_str(),
-        //        r2->__str__().c_str()); REQUIRE(eq(*r1, *r2));
 
         r1 = bessel(nu, z)->diff(z);
         r2 = sub(div(bessel(sub(nu, one), z), integer(2)),
