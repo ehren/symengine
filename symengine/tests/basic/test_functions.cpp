@@ -3697,30 +3697,26 @@ TEST_CASE("Bessel: functions", "[functions]")
     RCP<const Basic> r1;
     RCP<const Basic> r2;
 
-    std::function<RCP<Basic>(const RCP<const Basic> &,
-                             const RCP<const Basic> &)>
-        uneval_besselj
+    typedef std::function<RCP<Basic>(const RCP<const Basic> &,
+                                     const RCP<const Basic> &)>
+        uneval_fn;
+
+    uneval_fn uneval_besselj
         = [](const RCP<const Basic> &n, const RCP<const Basic> &z) {
               return make_rcp<BesselJ>(n, z);
           };
 
-    std::function<RCP<Basic>(const RCP<const Basic> &,
-                             const RCP<const Basic> &)>
-        uneval_bessely
+    uneval_fn uneval_bessely
         = [](const RCP<const Basic> &n, const RCP<const Basic> &z) {
               return make_rcp<BesselY>(n, z);
           };
 
-    std::function<RCP<Basic>(const RCP<const Basic> &,
-                             const RCP<const Basic> &)>
-        uneval_besseli
+    uneval_fn uneval_besseli
         = [](const RCP<const Basic> &n, const RCP<const Basic> &z) {
               return make_rcp<BesselI>(n, z);
           };
 
-    std::function<RCP<Basic>(const RCP<const Basic> &,
-                             const RCP<const Basic> &)>
-        uneval_besselk
+    uneval_fn uneval_besselk
         = [](const RCP<const Basic> &n, const RCP<const Basic> &z) {
               return make_rcp<BesselK>(n, z);
           };
@@ -3730,7 +3726,10 @@ TEST_CASE("Bessel: functions", "[functions]")
     auto eval_uneval_y = std::make_tuple(bessely, uneval_bessely);
     auto eval_uneval_k = std::make_tuple(besselk, uneval_besselk);
 
-    for (const auto &bessel : {besselj, besseli}) {
+    for (const auto &t : {eval_uneval_j, eval_uneval_i}) {
+        const auto &bessel = std::get<0>(t);
+        const auto &uneval_bessel = std::get<1>(t);
+
         r1 = bessel(zero, zero);
         r2 = one;
         REQUIRE(eq(*r1, *r2));
@@ -3758,17 +3757,6 @@ TEST_CASE("Bessel: functions", "[functions]")
         r1 = bessel(Complex::from_two_nums(*zero, *integer(-2)), zero);
         r2 = Nan;
         REQUIRE(eq(*r1, *r2));
-    }
-
-    // TODO when assumptions implemented
-    // n_i = Symbol('n_i',integer=True)
-    // k_i = Symbol('k_i',integer=True, zero=False)
-    // assert f(n_i, 0) != S.One and f(n_i, 0) != S.Zero  # // PASSES trivially
-    // assert f(k_i, 0) is S.Zero  # FAILS (needs assumptions)
-
-    for (const auto &t : {eval_uneval_j, eval_uneval_i}) {
-        const auto &bessel = std::get<0>(t);
-        const auto &uneval_bessel = std::get<1>(t);
 
         r1 = bessel(nu, zero);
         r2 = uneval_bessel(nu, zero);
@@ -3782,6 +3770,17 @@ TEST_CASE("Bessel: functions", "[functions]")
         r2 = mul(pow(mul(minus_one, z), nu),
                  mul(pow(z, mul(minus_one, nu)), uneval_bessel(nu, z)));
         REQUIRE(eq(*r1, *r2));
+
+        // this currently passes trivially
+        // it should continue to pass with integer assumptions on `nu`
+        r1 = bessel(nu, zero);
+        r2 = uneval_bessel(nu, zero);
+        REQUIRE(eq(*r1, *r2));
+
+        // this needs assumptions
+        // r1 = bessel(nu_with_int_and_nonzero_assumption, zero);
+        // r2 = zero;
+        // REQUIRE(eq(*r1, *r2));
     }
 
     r1 = bessely(zero, zero);
@@ -3962,6 +3961,38 @@ TEST_CASE("Bessel: functions", "[functions]")
         r2 = Derivative::create(uneval_bessel(nu, z), {nu});
         REQUIRE(eq(*r1, *r2));
     }
+
+    double prec = 1e-10;
+
+    for (const auto &t :
+         {std::make_tuple(besselj, integer(3), 2.5, 0.2166003910391),
+          std::make_tuple(besselj, integer(5), 2.5, 0.0195016251345)}) {
+        const auto bessel = std::get<0>(t);
+        const RCP<const Integer> nu_i = std::get<1>(t);
+        const double z_d = std::get<2>(t);
+        const double res = std::get<3>(t);
+
+        mpfr_class z_mpfr(100);
+        mpfr_set_d(z_mpfr.get_mpfr_t(), z_d, MPFR_RNDN);
+        r1 = besselj(nu_i, real_mpfr(std::move(z_mpfr)));
+        printf("%s\n", r1->__str__().c_str());
+        REQUIRE(
+            mpfr_cmp_d(down_cast<const RealMPFR &>(*r1).as_mpfr().get_mpfr_t(),
+                       res - prec)
+            == 1);
+        REQUIRE(
+            mpfr_cmp_d(down_cast<const RealMPFR &>(*r1).as_mpfr().get_mpfr_t(),
+                       res + prec)
+            == -1);
+    }
+
+    mpfr_class z_mpfr(100);
+    mpfr_set_d(z_mpfr.get_mpfr_t(), std::nan(""), MPFR_RNDN);
+    r1 = besselj(integer(0), real_mpfr(std::move(z_mpfr)));
+    printf("%s\n", r1->__str__().c_str());
+    REQUIRE(mpfr_cmp_d(down_cast<const RealMPFR &>(*r1).as_mpfr().get_mpfr_t(),
+                       std::nan(""))
+            == 0);
 }
 
 TEST_CASE("Abs: functions", "[functions]")

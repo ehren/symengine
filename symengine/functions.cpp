@@ -3001,9 +3001,11 @@ static RCP<const Basic> bessel_first_kind(const RCP<const Basic> &nu,
                 // unevaluated
             } else if (is_a<Integer>(nnu) or nnu.is_positive()) {
                 return zero;
+            } else if (nnu.is_negative()) {
+                return ComplexInf;
             } else if (is_a_Complex(nnu)) {
                 const ComplexBase &c = down_cast<const ComplexBase &>(nnu);
-                RCP<const Number> real_part = c.real_part();
+                const RCP<const Number> real_part = c.real_part();
                 if (real_part->is_positive()) {
                     return zero;
                 } else if (real_part->is_zero()) {
@@ -3011,9 +3013,6 @@ static RCP<const Basic> bessel_first_kind(const RCP<const Basic> &nu,
                 } else {
                     return ComplexInf;
                 }
-            } else {
-                SYMENGINE_ASSERT(nnu.is_negative());
-                return ComplexInf;
             }
         }
     }
@@ -3022,6 +3021,7 @@ static RCP<const Basic> bessel_first_kind(const RCP<const Basic> &nu,
         return mul(pow(z, nu), mul(pow(mul(minus_one, z), mul(minus_one, nu)),
                                    bessel(nu, mul(minus_one, z))));
     } else if (is_a<Integer>(*nu)) {
+
         if (could_extract_minus(*nu)) {
             return mul(pow(mul(minus_one, a), mul(minus_one, nu)),
                        bessel(mul(minus_one, nu), z));
@@ -3069,7 +3069,22 @@ RCP<const Basic> BesselJ::create(const RCP<const Basic> &nu,
 
 RCP<const Basic> besselj(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 {
-    RCP<const Integer> &a = one;
+#ifdef HAVE_SYMENGINE_MPFR
+    if (is_a<RealMPFR>(*z)) {
+        if (is_a<Integer>(*nu)) {
+            signed long int nu_ = down_cast<const Integer &>(*nu).as_int();
+            mpfr_srcptr z_ = down_cast<const RealMPFR &>(*z).i.get_mpfr_t();
+            mpfr_class r(mpfr_get_prec(z_));
+            mpfr_jn(r.get_mpfr_t(), nu_, z_, MPFR_RNDN);
+            return real_mpfr(std::move(r));
+        } else {
+            throw NotImplementedError(
+                "For RealMPFR z in besselj(nu, z), nu must be an Integer.");
+        }
+    }
+#endif
+
+    RCP<const Integer> a = one;
     return bessel_first_kind<BesselJ, besselj, besseli>(nu, z, a);
 }
 
@@ -3147,6 +3162,21 @@ RCP<const Basic> BesselY::create(const RCP<const Basic> &nu,
 
 RCP<const Basic> bessely(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 {
+#ifdef HAVE_SYMENGINE_MPFR
+    if (is_a<RealMPFR>(*z)) {
+        if (is_a<Integer>(*nu)) {
+            signed long int nu_ = down_cast<const Integer &>(*nu).as_int();
+            mpfr_srcptr z_ = down_cast<const RealMPFR &>(*z).i.get_mpfr_t();
+            mpfr_class r(mpfr_get_prec(z_));
+            mpfr_yn(r.get_mpfr_t(), nu_, z_, MPFR_RNDN);
+            return real_mpfr(std::move(r));
+        } else {
+            throw NotImplementedError(
+                "For RealMPFR z in bessely(nu, z), nu must be an Integer.");
+        }
+    }
+#endif
+
     RCP<const Integer> &b = one;
     return bessel_second_kind<BesselY, bessely>(nu, z, b);
 }
@@ -3165,6 +3195,12 @@ RCP<const Basic> BesselI::create(const RCP<const Basic> &nu,
 
 RCP<const Basic> besseli(const RCP<const Basic> &nu, const RCP<const Basic> &z)
 {
+#ifdef HAVE_SYMENGINE_MPFR
+    if (is_a<RealMPFR>(*z)) {
+        throw NotImplementedError("Not implemented.");
+    }
+#endif
+
     RCP<const Integer> &a = minus_one;
     return bessel_first_kind<BesselI, besseli, besselj>(nu, z, a);
 }
