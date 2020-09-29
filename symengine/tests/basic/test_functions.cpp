@@ -1707,6 +1707,74 @@ TEST_CASE("Could extract minus: functions", "[functions]")
     REQUIRE(b == true);
 }
 
+TEST_CASE("extract_multiplicatively: functions", "[functions]")
+{
+    RCP<const Basic> x = symbol("x");
+    RCP<const Basic> y = symbol("y");
+    
+    RCP<const Number> i2 = integer(2);
+    RCP<const Number> im1 = integer(-1);
+    
+    RCP<const Basic> a, b, r, e;
+    bool success;
+
+    a = mul(integer(2), x);
+    b = x;
+    e = integer(2);
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    REQUIRE(eq(*r, *e));
+
+    a = mul(integer(4), x);
+    b = mul(integer(2), x);
+    e = integer(2);
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    REQUIRE(eq(*r, *e));
+
+    a = mul(rational(1, 2), x);
+    b = x;
+    e = rational(1, 2);
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    REQUIRE(eq(*r, *e));
+    
+    a = mul(rational(1, 2), x);
+    b = a;
+    e = one;
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    REQUIRE(eq(*r, *e));
+    
+    a = mul(rational(1, 2), x);
+    b = mul(rational(1, 4), x);
+    e = integer(2);
+//    extract_multiplicatively(a, b, outArg(r));
+//    printf("%s\n", r->__str__().c_str());
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    REQUIRE(eq(*r, *e));
+    
+    a = mul(rational(1, 4), x);
+    b = mul(rational(1, 2), x);
+    e = rational(1, 2);
+        extract_multiplicatively(a, b, outArg(r));
+        printf("%s\n", r->__str__().c_str());
+//    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+//    REQUIRE(eq(*r, *e));
+    
+    a = mul(rational(1, 4), x);
+    b = rational(1, 2);
+    e = mul(rational(1, 2), x);
+        success = extract_multiplicatively(a, b, outArg(r));
+        printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    REQUIRE(eq(*r, *e));
+
+    a = mul(integer(-2), x);
+    b = rational(1, 2);
+    e = mul(integer(-4), x);
+    success = extract_multiplicatively(a, b, outArg(r));
+    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    REQUIRE(eq(*r, *e));
+}
+
 TEST_CASE("Asin: functions", "[functions]")
 {
     RCP<const Basic> im1 = integer(-1);

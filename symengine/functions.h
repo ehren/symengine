@@ -292,6 +292,8 @@ bool could_extract_minus(const Basic &arg);
 bool handle_minus(const RCP<const Basic> &arg,
                   const Ptr<RCP<const Basic>> &rarg);
 
+bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic> &c, const Ptr<RCP<const Basic>> &result);
+
 /*! returns `true` if the given argument `t` is found in the
 *   lookup table `d`. It also returns the value in `index`
 **/

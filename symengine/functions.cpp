@@ -359,15 +359,18 @@ bool handle_minus(const RCP<const Basic> &arg,
 // \returns (true, extraction) if `c` could be extracted from `arg` in a nice
 // way otherwise (false, arg)
 // TODO: handle more than just `Mul`
-static std::tuple<bool, RCP<const Basic>>
-extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic> &c)
+bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic> &c, const Ptr<RCP<const Basic>> &result)
 {
+    printf("extract: %s %s\n", arg->__str__().c_str(), c->__str__().c_str());
+    
     if (eq(*arg, *c)) {
-        return std::make_tuple(true, one);
+        *result = one;
+        return true;
     } else if (eq(*c, *one)) {
-        return std::make_tuple(true, arg);
-    } else if (eq(*arg, *Nan)) {
-        return std::make_tuple(false, arg);
+        *result = arg;
+        return true;
+    } else if (eq(*arg, *Nan) or eq(*arg, *Inf) or eq(*arg, *NegInf) or eq(*arg, *ComplexInf)) {
+        return false;
     }
 
     if (is_a<Mul>(*c)) {
@@ -376,40 +379,62 @@ extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic> &c)
         RCP<const Basic> a, b;
         m.as_two_terms(outArg(a), outArg(b));
 
-        bool success;
         RCP<const Basic> x;
-        std::tie(success, x) = extract_multiplicatively(arg, a);
-
-        if (success) {
-            return extract_multiplicatively(x, b);
+        if (extract_multiplicatively(arg, a, outArg(x))) {
+            return extract_multiplicatively(x, b, result);
         } else {
-            return std::make_tuple(false, arg);
+            return false;
         }
     }
 
     if (is_a<Mul>(*arg)) {
         const Mul &m = down_cast<const Mul &>(*arg);
         vec_basic args = m.get_args();
-        bool succeeded = false;
+        bool success = false;
 
         for (std::size_t i = 0; i < args.size(); ++i) {
             RCP<const Basic> &a = args[i];
 
-            bool success;
             RCP<const Basic> x;
-            std::tie(success, x) = extract_multiplicatively(a, c);
-            if (success) {
+            if (extract_multiplicatively(a, c, outArg(x))) {
                 args[i] = x;
-                succeeded = true;
+                success = true;
             }
         }
 
-        if (succeeded) {
-            return std::make_tuple(true, mul(args));
+        if (success) {
+            *result = mul(args);
+            return true;
         }
+    } else if (is_a<Add>(*arg)) {
+        
+        //vec_basic args = m.get_args();
+        
+        
+    } else {
+        RCP<const Basic> quotient = div(arg, c);
+        
+        if (is_a<Integer>(*quotient)) {
+            const Integer &qi = down_cast<const Integer&>(*quotient);
+            if (qi.is_negative() and is_a<Integer>(*arg) and down_cast<const Integer&>(*arg).is_positive()) {
+                return false;
+            }
+            *result = quotient;
+            return true;
+        } /*else if (is_a<Rational>(*quotient) and is_a<Rational>(*arg) and sub(*down_cast<const Rational&>(*arg).get_den(), *down_cast<const Rational&>(*quotient).get_den())) {
+            *result = quotient;
+            return true;
+        }*/
+        
+//        auto wtf = down_cast<const Rational&>(*arg).get_den();
+        else if (is_a<Rational>(*quotient) and is_a<Rational>(*arg) and eq(*Le(down_cast<const Rational&>(*quotient).get_den(), down_cast<const Rational&>(*arg).get_den()), *boolean(true))) {
+       *result = quotient;
+       return true;
+       }
+        RCPIntegerKeyLess()(one, one);
     }
-
-    return std::make_tuple(false, arg);
+    
+    return false;
 }
 
 // \return true if conjugate has to be returned finally else false
@@ -3026,10 +3051,8 @@ static RCP<const Basic> bessel_first_kind(const RCP<const Basic> &nu,
             return mul(pow(mul(minus_one, a), mul(minus_one, nu)),
                        bessel(mul(minus_one, nu), z));
         } else {
-            bool success;
             RCP<const Basic> newz;
-            std::tie(success, newz) = extract_multiplicatively(z, I);
-            if (success and neq(*newz, *zero)) {
+            if (extract_multiplicatively(z, I, outArg(newz)) and neq(*newz, *zero)) {
                 return mul(pow(I, mul(a, nu)),
                            modified_opposite(nu, mul(a, newz)));
             }
