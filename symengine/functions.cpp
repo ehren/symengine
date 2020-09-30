@@ -453,7 +453,7 @@ bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic
         }*/
         
 //        auto wtf = down_cast<const Rational&>(*arg).get_den();
-        else if (is_a<Rational>(*quotient) and is_a<Rational>(*arg) and eq(*Le(down_cast<const Rational&>(*quotient).get_den(), down_cast<const Rational&>(*arg).get_den()), *boolean(true))) {
+        else if (is_a<Rational>(*quotient) and is_a<Rational>(*arg) /*and eq(*Le(down_cast<const Rational&>(*quotient).get_den(), down_cast<const Rational&>(*arg).get_den()), *boolean(true))*/) {
        *result = quotient;
        return true;
        }

@@ -1840,12 +1840,46 @@ TEST_CASE("extract_multiplicatively: functions", "[functions]")
     //    extract_multiplicatively(a, b, outArg(r));
     REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
 //    printf("%d %s\n", success, r->__str__().c_str());
-//    REQUIRE(eq(*r, *e));
+    REQUIRE(eq(*r, *e));
     
     a = add(mul(integer(-4), x), integer(2));
     b = integer(-2);
     //    extract_multiplicatively(a, b, outArg(r));
     REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
+    
+    a = mul(integer(2), x);
+    b = mul(integer(4), x);
+    //    extract_multiplicatively(a, b, outArg(r));
+    REQUIRE(not extract_multiplicatively(a, b, outArg(r))); // matches SymPy
+    
+    a = div(x, integer(2));
+//    b = mul(integer(4), x);
+    b = x;
+    e = rational(1, 2);
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(eq(*r, *e));
+//    REQUIRE(eq(*r, *e));
+    
+    a = div(x, integer(2));
+    b = div(x, integer(4));
+    e = integer(2);
+//    extract_multiplicatively(a, b, outArg(r)); // matches SymPy
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(eq(*r, *e));
+    
+    a = rational(1, 2);
+    b = x;
+//    e = rational(1, 2);
+    //    extract_multiplicatively(a, b, outArg(r)); // matches SymPy
+    REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
+    
+    a = rational(1, 2);
+    b = integer(2);
+    //    e = rational(1, 2);
+    //    extract_multiplicatively(a, b, outArg(r)); // matches SymPy
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
 }
 
 TEST_CASE("Asin: functions", "[functions]")
