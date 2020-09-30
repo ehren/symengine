@@ -1765,6 +1765,14 @@ TEST_CASE("extract_multiplicatively: functions", "[functions]")
         printf("%d %s\n", success, r->__str__().c_str());
     REQUIRE(extract_multiplicatively(a, b, outArg(r)));
     REQUIRE(eq(*r, *e));
+    
+    a = mul(rational(-1, 4), x);
+    b = rational(1, 2);
+    e = mul(rational(-1, 2), x);
+    success = extract_multiplicatively(a, b, outArg(r));
+    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    REQUIRE(eq(*r, *e));
 
     a = mul(integer(-2), x);
     b = rational(1, 2);
@@ -1773,6 +1781,18 @@ TEST_CASE("extract_multiplicatively: functions", "[functions]")
     printf("%d %s\n", success, r->__str__().c_str());
     REQUIRE(extract_multiplicatively(a, b, outArg(r)));
     REQUIRE(eq(*r, *e));
+    
+    a = mul(integer(2), x);
+    b = integer(3);
+    REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
+    
+    a = x;
+    b = neg(x);
+    REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
+    
+    a = sqrt(x);
+    b = neg(x);
+    REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
 }
 
 TEST_CASE("Asin: functions", "[functions]")
