@@ -1793,6 +1793,59 @@ TEST_CASE("extract_multiplicatively: functions", "[functions]")
     a = sqrt(x);
     b = neg(x);
     REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
+    
+    a = add(mul(integer(2), x), integer(2));
+    b = integer(2);
+    e = add(one, x);
+//    extract_multiplicatively(a, b, outArg(r));
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(eq(*r, *e));
+    
+    a = add(mul(integer(4), x), integer(2));
+    b = integer(2);
+    e = add(mul(integer(2), x), one);
+//    extract_multiplicatively(a, b, outArg(r));
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(eq(*r, *e));
+    
+    a = sub(mul(integer(-4), x), integer(2));
+    b = integer(2);
+    e = sub(mul(integer(-2), x), one);
+    //    extract_multiplicatively(a, b, outArg(r));
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(eq(*r, *e));
+    
+    a = sub(mul(integer(-4), x), integer(2));
+    b = integer(-2);
+    e = add(mul(integer(2), x), one);
+    //    extract_multiplicatively(a, b, outArg(r));
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(eq(*r, *e));
+    
+    a = sub(mul(integer(4), x), integer(2));
+    b = integer(2);
+    e = sub(mul(integer(2), x), one);
+    //    extract_multiplicatively(a, b, outArg(r));
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(eq(*r, *e));
+    
+    a = sub(mul(integer(4), x), integer(2));
+    b = integer(-2);
+//    e = add(mul(integer(2), x), one);
+    //    extract_multiplicatively(a, b, outArg(r));
+    REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
+//    printf("%d %s\n", success, r->__str__().c_str());
+//    REQUIRE(eq(*r, *e));
+    
+    a = add(mul(integer(-4), x), integer(2));
+    b = integer(-2);
+    //    extract_multiplicatively(a, b, outArg(r));
+    REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
 }
 
 TEST_CASE("Asin: functions", "[functions]")

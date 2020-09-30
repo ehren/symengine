@@ -407,10 +407,36 @@ bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic
             return true;
         }
     } else if (is_a<Add>(*arg)) {
+        bool did_extraction = false;
+        bool failed = false;
+        bool success = false;
+        vec_basic args = down_cast<const Add &>(*arg).get_args();
+
+        for (std::size_t i = 0; i < args.size(); ++i) {
+            RCP<const Basic> x;
+            
+            if (extract_multiplicatively(args[i], c, outArg(x))) {
+                args[i] = x;
+                //failed = false;
+                
+//                if (not did_extraction or eq(*x, *args[i - 1])) {
+//                if (not did_extraction or eq(*x, *args[i - 1])) {
+//                    did_extraction = true;
+//                    args[i] = x;
+//                } else {
+//                    failed = true;
+//                    break;
+//                }
+            } else {
+                failed = true;
+                break;
+            }
+        }
         
-        //vec_basic args = m.get_args();
-        
-        
+        if (not failed) {
+            *result = add(args);
+            return true;
+        }
     } else {
         RCP<const Basic> quotient = div(arg, c);
         
@@ -3747,7 +3773,11 @@ RCP<const Basic> polygamma(const RCP<const Basic> &n_,
                 a += 1 / (f + i);
             }
             return add(Rational::from_mpq(a), res);
-        }
+        } else if (eq(*x_, *Nan)) {
+            return Nan;
+        } else if (eq(*x_, *Inf) or (eq(*x_, *NegInf))) {
+            return Inf;
+        } /*else */
     }
     return make_rcp<const PolyGamma>(n_, x_);
 }
