@@ -390,7 +390,7 @@ bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic
     if (is_a<Mul>(*arg)) {
         const Mul &m = down_cast<const Mul &>(*arg);
         vec_basic args = m.get_args();
-        bool success = false;
+//        bool success = false;
 
         for (std::size_t i = 0; i < args.size(); ++i) {
             RCP<const Basic> &a = args[i];
@@ -398,14 +398,16 @@ bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic
             RCP<const Basic> x;
             if (extract_multiplicatively(a, c, outArg(x))) {
                 args[i] = x;
-                success = true;
+                *result = mul(args);
+                return true;
+//                success = true;
             }
         }
 
-        if (success) {
-            *result = mul(args);
-            return true;
-        }
+//        if (success) {
+//            *result = mul(args);
+//            return true;
+//        }
     } else if (is_a<Add>(*arg)) {
         bool did_extraction = false;
         bool failed = false;
@@ -428,15 +430,13 @@ bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic
 //                    break;
 //                }
             } else {
-                failed = true;
-                break;
+                return false;
             }
         }
         
-        if (not failed) {
-            *result = add(args);
-            return true;
-        }
+        *result = add(args);
+        return true;
+    } else if (is_a<Pow>(*arg)) {
     } else {
         RCP<const Basic> quotient = div(arg, c);
         
