@@ -390,7 +390,6 @@ bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic
     if (is_a<Mul>(*arg)) {
         const Mul &m = down_cast<const Mul &>(*arg);
         vec_basic args = m.get_args();
-//        bool success = false;
 
         for (std::size_t i = 0; i < args.size(); ++i) {
             RCP<const Basic> &a = args[i];
@@ -400,18 +399,9 @@ bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic
                 args[i] = x;
                 *result = mul(args);
                 return true;
-//                success = true;
             }
         }
-
-//        if (success) {
-//            *result = mul(args);
-//            return true;
-//        }
     } else if (is_a<Add>(*arg)) {
-        bool did_extraction = false;
-        bool failed = false;
-        bool success = false;
         vec_basic args = down_cast<const Add &>(*arg).get_args();
 
         for (std::size_t i = 0; i < args.size(); ++i) {
@@ -419,16 +409,6 @@ bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic
             
             if (extract_multiplicatively(args[i], c, outArg(x))) {
                 args[i] = x;
-                //failed = false;
-                
-//                if (not did_extraction or eq(*x, *args[i - 1])) {
-//                if (not did_extraction or eq(*x, *args[i - 1])) {
-//                    did_extraction = true;
-//                    args[i] = x;
-//                } else {
-//                    failed = true;
-//                    break;
-//                }
             } else {
                 return false;
             }
@@ -437,6 +417,51 @@ bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic
         *result = add(args);
         return true;
     } else if (is_a<Pow>(*arg)) {
+        const Pow &argpow = down_cast<const Pow&>(*arg);
+        RCP<const Basic> newexp;
+        
+        if (is_a<Pow>(*c)) {
+            const Pow &cpow = down_cast<const Pow&>(*c);
+            
+            if (eq(*argpow.get_base(), *cpow.get_base())) {
+                newexp = sub(argpow.get_exp(), cpow.get_exp());
+            }
+        } else if (eq(*argpow.get_base(), *c)) {
+            newexp = sub(argpow.get_exp(), one);
+        }
+        
+        if (not newexp.is_null()) {
+            newexp = expand(newexp);
+            
+            if (is_a_Number(*newexp)) {
+                const Number& newexpnum = down_cast<const Number&>(*newexp);
+                
+                if (is_a_Number(*argpow.get_exp())) {
+                    if (not newexpnum.is_zero()) {
+                        RCP<const Boolean> lt = Lt(abs(newexp), abs(argpow.get_exp()));
+                        
+                        const Number& argexpnum = down_cast<const Number&>(*argpow.get_exp());
+                        if (newexpnum.is_positive() and argexpnum.is_positive() and eq(*lt, *boolean(true))) {
+                            // good
+                        } else if (newexpnum.is_negative() and argexpnum.is_negative() and eq(*lt, *boolean(true))) {
+                            // good
+                        } else if (eq(*lt, *boolean(true))) {
+                            // good?
+                            return false;
+                        } else {
+                            return false;
+                        }
+                        
+//                        } else if (newexpnum.is_negative() and ())
+                        
+//                        if (newexpnum.is_negative() and )
+                    }
+                }
+
+                *result = pow(argpow.get_base(), newexp);
+                return true;
+            }
+        }
     } else {
         RCP<const Basic> quotient = div(arg, c);
         
@@ -457,7 +482,6 @@ bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic
        *result = quotient;
        return true;
        }
-        RCPIntegerKeyLess()(one, one);
     }
     
     return false;

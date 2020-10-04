@@ -1907,6 +1907,51 @@ TEST_CASE("extract_multiplicatively: functions", "[functions]")
     e = rational(115, 37);
     REQUIRE(extract_multiplicatively(a, b, outArg(r)));
     printf("%d %s\n", success, r->__str__().c_str());
+    
+    a = pow(x, integer(2));
+    b = x;
+    e = x;
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(eq(*r, *e));
+    
+    a = pow(x, integer(3));
+    b = pow(x, integer(2));
+    e = x;
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(eq(*r, *e));
+    
+    a = pow(x, integer(-3));
+    b = pow(x, integer(2));
+    REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
+    
+    a = pow(x, integer(-1));
+    b = x;
+    REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
+    
+    a = pow(x, y);
+    b = x;
+    REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
+    
+    // SymPy doesn't handle this case (requires `expand` in `extract_multiplicatively`)
+    a = pow(x, y);
+    b = pow(x, sub(y, one));
+    e = x;
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    REQUIRE(eq(*r, *e));
+    
+    a = pow(mul(x, y), integer(3));
+    b = mul(pow(x, integer(2)), y);
+    e = mul(x, pow(y, integer(2)));
+    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+    REQUIRE(eq(*r, *e));
+    
+    a = pow(mul(x, y), integer(3));
+    b = mul(pow(x, integer(4)), y);
+//    REQUIRE(extract_multiplicatively(a, b, outArg(r)));
+//    printf("%d %s\n", success, r->__str__().c_str());
+    REQUIRE(not extract_multiplicatively(a, b, outArg(r)));
 }
 
 TEST_CASE("Asin: functions", "[functions]")
