@@ -1265,6 +1265,15 @@ public:
     }
 };
 
+inline bool is_a_Bessel(const Basic &b)
+{
+    return (b.get_type_code() == SYMENGINE_BESSELBASE
+            || b.get_type_code() == SYMENGINE_BESSELJ
+            || b.get_type_code() == SYMENGINE_BESSELY
+            || b.get_type_code() == SYMENGINE_BESSELI
+            || b.get_type_code() == SYMENGINE_BESSELK);
+}
+
 class BesselJ : public BesselBase
 {
 private:

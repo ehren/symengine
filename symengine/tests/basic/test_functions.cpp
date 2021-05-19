@@ -3943,6 +3943,8 @@ TEST_CASE("Bessel: functions", "[functions]")
 
     RCP<const Basic> r1;
     RCP<const Basic> r2;
+    
+    REQUIRE(is_a_Bessel(*besselj(nu, z)));
 
     typedef std::function<RCP<Basic>(const RCP<const Basic> &,
                                      const RCP<const Basic> &)>

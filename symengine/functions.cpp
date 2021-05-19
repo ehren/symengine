@@ -92,7 +92,7 @@ bool Conjugate::is_canonical(const RCP<const Basic> &arg) const
         return false;
     }
     // correct?
-    if (is_a<BesselBase>(*arg)) {
+    if (is_a_Bessel(*arg)) {
         const BesselBase &bb = down_cast<const BesselBase &>(*arg);
         if (is_a_Number(*bb.argument())
             and not down_cast<const Number &>(*bb.argument()).is_negative()) {
@@ -160,7 +160,7 @@ RCP<const Basic> conjugate(const RCP<const Basic> &arg)
 
     bool can_conjugate_two_arg = is_a<ATan2>(*arg) or is_a<LowerGamma>(*arg)
                                  or is_a<UpperGamma>(*arg) or is_a<Beta>(*arg);
-    if (is_a<BesselBase>(*arg)) {
+    if (is_a_Bessel(*arg)) {
         const BesselBase &bb = down_cast<const BesselBase &>(*arg);
         if (is_a_Number(*bb.argument())
             and not down_cast<const Number &>(*bb.argument()).is_negative()) {
@@ -2056,6 +2056,11 @@ bool Derivative::is_canonical(const RCP<const Basic> &arg,
             RCP<const Symbol> s = rcp_static_cast<const Symbol>(p);
             RCP<const MultiArgFunction> f
                 = rcp_static_cast<const MultiArgFunction>(arg);
+//            vec_basic f_args = f->get_args();
+//            if (is_a<BesselBase>(*f)) {
+//                // derivative wrt first arg should be unevaluated.
+//                f_args.erase(f_args.begin());
+//            }
             bool found_s = false;
             // 's' should be one of the args of the function
             // and should not appear anywhere else.
@@ -2081,7 +2086,7 @@ bool Derivative::is_canonical(const RCP<const Basic> &arg,
         return true;
     } else if (is_a<PolyGamma>(*arg) or is_a<Zeta>(*arg)
                or is_a<UpperGamma>(*arg) or is_a<LowerGamma>(*arg)
-               or is_a<Dirichlet_eta>(*arg)) {
+               or is_a<Dirichlet_eta>(*arg) or is_a_Bessel(*arg)) {
         bool found = false;
         auto v = arg->get_args();
         for (auto &p : x) {
@@ -3116,7 +3121,7 @@ static bool bessel_first_kind_is_canonical(const RCP<const Basic> &nu,
                                            const RCP<const Basic> &z)
 {
     if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
-        if (is_a_Number(*nu)) {
+        if (is_a_Number(*nu) and not eq(*nu, *Nan)) {
             return false;
         }
     }
@@ -3168,11 +3173,55 @@ static RCP<const Basic> bessel_second_kind(const RCP<const Basic> &nu,
                                            const RCP<const Basic> &z,
                                            const RCP<const Integer> &b)
 {
+//    bessel y
+    
+//    _a = S.One
+//    _b = S.One
+//
+//    @classmethod
+//    def eval(cls, nu, z):
+//        if z.is_zero:
+//            if nu.is_zero:
+//                return S.NegativeInfinity
+//            elif re(nu).is_zero is False:
+//                return S.ComplexInfinity
+//            elif re(nu).is_zero:
+//                return S.NaN
+//        if z is S.Infinity or z is S.NegativeInfinity:
+//            return S.Zero
+//
+//        if nu.is_integer:
+//            if nu.could_extract_minus_sign():
+//                return S.NegativeOne**(-nu)*bessely(-nu, z)
+   
+//     bessel k
+    
+//    _a = S.One
+//    _b = -S.One
+//
+//    @classmethod
+//    def eval(cls, nu, z):
+//        if z.is_zero:
+//            if nu.is_zero:
+//                return S.Infinity
+//            elif re(nu).is_zero is False:
+//                return S.ComplexInfinity
+//            elif re(nu).is_zero:
+//                return S.NaN
+//        if z in (S.Infinity, I*S.Infinity, I*S.NegativeInfinity):
+//            return S.Zero
+//
+//        if nu.is_integer:
+//            if nu.could_extract_minus_sign():
+//                return besselk(-nu, z)
+
+    
+    
     if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
         if (is_a_Number(*nu)) {
             const Number &nnu = down_cast<const Number &>(*nu);
             if (nnu.is_zero()) {
-                return mul(b, NegInf);
+                return mul(b, NegInf); // checked
             } else if (is_a_Complex(nnu)) {
                 const ComplexBase &c = down_cast<const ComplexBase &>(nnu);
                 RCP<const Number> real_part = c.real_part();
@@ -3181,20 +3230,19 @@ static RCP<const Basic> bessel_second_kind(const RCP<const Basic> &nu,
                 } else {
                     return ComplexInf;
                 }
-            } else if (eq(nnu, *Inf) or eq(nnu, *mul(b, NegInf))
-                       // TODO? directional complex infinity not in e.g. maple
-                       // or eq(nnu, *mul(sqrt(b), Inf))
-                       // or eq(nnu, *mul(sqrt(b), NegInf))
-            ) {
-                return zero;
             } else if (neq(nnu, *Nan)) {
-                // nu finite and non-zero
                 return ComplexInf;
             } else {
-                // unreachable
-                SYMENGINE_ASSERT(false);
+                // Leave unevaluated when nu is Nan to match other CASs including SymPy
+                // XXX should this be Nan?
             }
         }
+    } else if (eq(*z, *Inf) or eq(*z, *mul(b, NegInf))
+//               or eq(*z, *mul(sqrt(b), Inf))   // multiplication of Infinity with Complex not implemented
+//               or eq(*z, *mul(sqrt(b), NegInf))) {
+               ) {
+        ComplexInf->is_complex();
+        return zero;
     }
 
     if (is_a<Integer>(*nu) and could_extract_minus(*nu)) {
@@ -3209,7 +3257,7 @@ static bool bessel_second_kind_is_canonical(const RCP<const Basic> &nu,
                                             const RCP<const Basic> &z)
 {
     if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
-        if (is_a_Number(*nu)) {
+        if (is_a_Number(*nu) and not eq(*nu, *Nan)) {
             return false;
         }
     }
