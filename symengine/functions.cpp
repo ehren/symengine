@@ -91,6 +91,15 @@ bool Conjugate::is_canonical(const RCP<const Basic> &arg) const
         or is_a<Beta>(*arg)) {
         return false;
     }
+    // correct?
+    if (is_a_Bessel(*arg)) {
+        const BesselBase &bb = down_cast<const BesselBase &>(*arg);
+        if (is_a_Number(*bb.argument())
+            and not down_cast<const Number &>(*bb.argument()).is_negative()) {
+            return false;
+        }
+    }
+
     // MultiArgFunction class
     if (is_a<LeviCivita>(*arg)) {
         return false;
@@ -148,8 +157,17 @@ RCP<const Basic> conjugate(const RCP<const Basic> &arg)
         const OneArgFunction &func = down_cast<const OneArgFunction &>(*arg);
         return func.create(conjugate(func.get_arg()));
     }
-    if (is_a<ATan2>(*arg) or is_a<LowerGamma>(*arg) or is_a<UpperGamma>(*arg)
-        or is_a<Beta>(*arg)) {
+
+    bool can_conjugate_two_arg = is_a<ATan2>(*arg) or is_a<LowerGamma>(*arg)
+                                 or is_a<UpperGamma>(*arg) or is_a<Beta>(*arg);
+    if (is_a_Bessel(*arg)) {
+        const BesselBase &bb = down_cast<const BesselBase &>(*arg);
+        if (is_a_Number(*bb.argument())
+            and not down_cast<const Number &>(*bb.argument()).is_negative()) {
+            can_conjugate_two_arg = true;
+        }
+    }
+    if (can_conjugate_two_arg) {
         const TwoArgFunction &func = down_cast<const TwoArgFunction &>(*arg);
         return func.create(conjugate(func.get_arg1()),
                            conjugate(func.get_arg2()));
@@ -337,6 +355,137 @@ bool handle_minus(const RCP<const Basic> &arg,
         return true;
     }
     *rarg = arg;
+    return false;
+}
+
+// \returns (true, extraction) if `c` could be extracted from `arg` in a nice
+// way otherwise (false, arg)
+// TODO: handle more than just `Mul`
+bool extract_multiplicatively(const RCP<const Basic> &arg, const RCP<const Basic> &c, const Ptr<RCP<const Basic>> &result)
+{
+    printf("extract: %s %s\n", arg->__str__().c_str(), c->__str__().c_str());
+    
+    if (eq(*arg, *c)) {
+        *result = one;
+        return true;
+    } else if (eq(*c, *one)) {
+        *result = arg;
+        return true;
+    } else if (eq(*arg, *Nan) or eq(*arg, *Inf) or eq(*arg, *NegInf) or eq(*arg, *ComplexInf)) {
+        return false;
+    }
+
+    if (is_a<Mul>(*c)) {
+        const Mul &m = down_cast<const Mul &>(*c);
+
+        RCP<const Basic> a, b;
+        m.as_two_terms(outArg(a), outArg(b));
+
+        RCP<const Basic> x;
+        if (extract_multiplicatively(arg, a, outArg(x))) {
+            return extract_multiplicatively(x, b, result);
+        } else {
+            return false;
+        }
+    }
+
+    if (is_a<Mul>(*arg)) {
+        const Mul &m = down_cast<const Mul &>(*arg);
+        vec_basic args = m.get_args();
+
+        for (std::size_t i = 0; i < args.size(); ++i) {
+            RCP<const Basic> &a = args[i];
+
+            RCP<const Basic> x;
+            if (extract_multiplicatively(a, c, outArg(x))) {
+                args[i] = x;
+                *result = mul(args);
+                return true;
+            }
+        }
+    } else if (is_a<Add>(*arg)) {
+        vec_basic args = down_cast<const Add &>(*arg).get_args();
+
+        for (std::size_t i = 0; i < args.size(); ++i) {
+            RCP<const Basic> x;
+            
+            if (extract_multiplicatively(args[i], c, outArg(x))) {
+                args[i] = x;
+            } else {
+                return false;
+            }
+        }
+        
+        *result = add(args);
+        return true;
+    } else if (is_a<Pow>(*arg)) {
+        const Pow &argpow = down_cast<const Pow&>(*arg);
+        RCP<const Basic> newexp;
+        
+        if (is_a<Pow>(*c)) {
+            const Pow &cpow = down_cast<const Pow&>(*c);
+            
+            if (eq(*argpow.get_base(), *cpow.get_base())) {
+                newexp = sub(argpow.get_exp(), cpow.get_exp());
+            }
+        } else if (eq(*argpow.get_base(), *c)) {
+            newexp = sub(argpow.get_exp(), one);
+        }
+        
+        if (not newexp.is_null()) {
+            newexp = expand(newexp);
+            
+            if (is_a_Number(*newexp)) {
+                const Number& newexpnum = down_cast<const Number&>(*newexp);
+                
+                if (is_a_Number(*argpow.get_exp())) {
+                    if (not newexpnum.is_zero()) {
+                        RCP<const Boolean> lt = Lt(abs(newexp), abs(argpow.get_exp()));
+                        
+                        const Number& argexpnum = down_cast<const Number&>(*argpow.get_exp());
+                        if (newexpnum.is_positive() and argexpnum.is_positive() and eq(*lt, *boolean(true))) {
+                            // good
+                        } else if (newexpnum.is_negative() and argexpnum.is_negative() and eq(*lt, *boolean(true))) {
+                            // good
+                        } else if (eq(*lt, *boolean(true))) {
+                            // good?
+                            return false;
+                        } else {
+                            return false;
+                        }
+                        
+//                        } else if (newexpnum.is_negative() and ())
+                        
+//                        if (newexpnum.is_negative() and )
+                    }
+                }
+
+                *result = pow(argpow.get_base(), newexp);
+                return true;
+            }
+        }
+    } else {
+        RCP<const Basic> quotient = div(arg, c);
+        
+        if (is_a<Integer>(*quotient)) {
+            const Integer &qi = down_cast<const Integer&>(*quotient);
+            if (qi.is_negative() and is_a<Integer>(*arg) and down_cast<const Integer&>(*arg).is_positive()) {
+                return false;
+            }
+            *result = quotient;
+            return true;
+        } /*else if (is_a<Rational>(*quotient) and is_a<Rational>(*arg) and sub(*down_cast<const Rational&>(*arg).get_den(), *down_cast<const Rational&>(*quotient).get_den())) {
+            *result = quotient;
+            return true;
+        }*/
+        
+//        auto wtf = down_cast<const Rational&>(*arg).get_den();
+        else if (is_a<Rational>(*quotient) and is_a<Rational>(*arg) /*and eq(*Le(down_cast<const Rational&>(*quotient).get_den(), down_cast<const Rational&>(*arg).get_den()), *boolean(true))*/) {
+       *result = quotient;
+       return true;
+       }
+    }
+    
     return false;
 }
 
@@ -1902,6 +2051,11 @@ bool Derivative::is_canonical(const RCP<const Basic> &arg,
             RCP<const Symbol> s = rcp_static_cast<const Symbol>(p);
             RCP<const MultiArgFunction> f
                 = rcp_static_cast<const MultiArgFunction>(arg);
+//            vec_basic f_args = f->get_args();
+//            if (is_a<BesselBase>(*f)) {
+//                // derivative wrt first arg should be unevaluated.
+//                f_args.erase(f_args.begin());
+//            }
             bool found_s = false;
             // 's' should be one of the args of the function
             // and should not appear anywhere else.
@@ -1927,7 +2081,7 @@ bool Derivative::is_canonical(const RCP<const Basic> &arg,
         return true;
     } else if (is_a<PolyGamma>(*arg) or is_a<Zeta>(*arg)
                or is_a<UpperGamma>(*arg) or is_a<LowerGamma>(*arg)
-               or is_a<Dirichlet_eta>(*arg)) {
+               or is_a<Dirichlet_eta>(*arg) or is_a_Bessel(*arg)) {
         bool found = false;
         auto v = arg->get_args();
         for (auto &p : x) {
@@ -2901,6 +3055,288 @@ RCP<const Basic> erfc(const RCP<const Basic> &arg)
     return make_rcp<const Erfc>(d);
 }
 
+template <typename BesselClass,
+          RCP<const Basic> (*bessel)(const RCP<const Basic> &,
+                                     const RCP<const Basic> &),
+          RCP<const Basic> (*modified_opposite)(const RCP<const Basic> &,
+                                                const RCP<const Basic> &)>
+static RCP<const Basic> bessel_first_kind(const RCP<const Basic> &nu,
+                                          const RCP<const Basic> &z,
+                                          const RCP<const Integer> &a)
+{
+    if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
+        if (is_a_Number(*nu)) {
+            const Number &nnu = down_cast<const Number &>(*nu);
+            if (nnu.is_zero()) {
+                return one;
+            } else if (eq(nnu, *Inf) or eq(nnu, *NegInf) or eq(nnu, *ComplexInf)
+                       or eq(nnu, *Nan)) {
+                // unevaluated
+            } else if (is_a<Integer>(nnu) or nnu.is_positive()) {
+                return zero;
+            } else if (nnu.is_negative()) {
+                return ComplexInf;
+            } else if (is_a_Complex(nnu)) {
+                const ComplexBase &c = down_cast<const ComplexBase &>(nnu);
+                const RCP<const Number> real_part = c.real_part();
+                if (real_part->is_positive()) {
+                    return zero;
+                } else if (real_part->is_zero()) {
+                    return Nan;
+                } else {
+                    return ComplexInf;
+                }
+            }
+        }
+    }
+
+    if (could_extract_minus(*z)) {
+        return mul(pow(z, nu), mul(pow(mul(minus_one, z), mul(minus_one, nu)),
+                                   bessel(nu, mul(minus_one, z))));
+    } else if (is_a<Integer>(*nu)) {
+
+        if (could_extract_minus(*nu)) {
+            return mul(pow(mul(minus_one, a), mul(minus_one, nu)),
+                       bessel(mul(minus_one, nu), z));
+        } else {
+            RCP<const Basic> newz;
+            if (extract_multiplicatively(z, I, outArg(newz)) and neq(*newz, *zero)) {
+                return mul(pow(I, mul(a, nu)),
+                           modified_opposite(nu, mul(a, newz)));
+            }
+        }
+    }
+
+    return make_rcp<const BesselClass>(nu, z);
+}
+
+static bool bessel_first_kind_is_canonical(const RCP<const Basic> &nu,
+                                           const RCP<const Basic> &z)
+{
+    if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
+        if (is_a_Number(*nu) and not eq(*nu, *Nan)) {
+            return false;
+        }
+    }
+    if (could_extract_minus(*z)) {
+        return false;
+    } else if (is_a<Integer>(*nu) and could_extract_minus(*nu)) {
+        return false;
+    }
+    return true;
+}
+
+bool BesselJ::is_canonical(const RCP<const Basic> &nu,
+                           const RCP<const Basic> &z) const
+{
+    return bessel_first_kind_is_canonical(nu, z);
+}
+
+RCP<const Basic> BesselJ::create(const RCP<const Basic> &nu,
+                                 const RCP<const Basic> &z) const
+{
+    return besselj(nu, z);
+}
+
+RCP<const Basic> besselj(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+{
+#ifdef HAVE_SYMENGINE_MPFR
+    if (is_a<RealMPFR>(*z)) {
+        if (is_a<Integer>(*nu)) {
+            signed long int nu_ = down_cast<const Integer &>(*nu).as_int();
+            mpfr_srcptr z_ = down_cast<const RealMPFR &>(*z).i.get_mpfr_t();
+            mpfr_class r(mpfr_get_prec(z_));
+            mpfr_jn(r.get_mpfr_t(), nu_, z_, MPFR_RNDN);
+            return real_mpfr(std::move(r));
+        } else {
+            throw NotImplementedError(
+                "For RealMPFR z in besselj(nu, z), nu must be an Integer.");
+        }
+    }
+#endif
+
+    RCP<const Integer> a = one;
+    return bessel_first_kind<BesselJ, besselj, besseli>(nu, z, a);
+}
+
+template <typename BesselClass,
+          RCP<const Basic> (*create)(const RCP<const Basic> &,
+                                     const RCP<const Basic> &)>
+static RCP<const Basic> bessel_second_kind(const RCP<const Basic> &nu,
+                                           const RCP<const Basic> &z,
+                                           const RCP<const Integer> &b)
+{
+//    bessel y
+    
+//    _a = S.One
+//    _b = S.One
+//
+//    @classmethod
+//    def eval(cls, nu, z):
+//        if z.is_zero:
+//            if nu.is_zero:
+//                return S.NegativeInfinity
+//            elif re(nu).is_zero is False:
+//                return S.ComplexInfinity
+//            elif re(nu).is_zero:
+//                return S.NaN
+//        if z is S.Infinity or z is S.NegativeInfinity:
+//            return S.Zero
+//
+//        if nu.is_integer:
+//            if nu.could_extract_minus_sign():
+//                return S.NegativeOne**(-nu)*bessely(-nu, z)
+   
+//     bessel k
+    
+//    _a = S.One
+//    _b = -S.One
+//
+//    @classmethod
+//    def eval(cls, nu, z):
+//        if z.is_zero:
+//            if nu.is_zero:
+//                return S.Infinity
+//            elif re(nu).is_zero is False:
+//                return S.ComplexInfinity
+//            elif re(nu).is_zero:
+//                return S.NaN
+//        if z in (S.Infinity, I*S.Infinity, I*S.NegativeInfinity):
+//            return S.Zero
+//
+//        if nu.is_integer:
+//            if nu.could_extract_minus_sign():
+//                return besselk(-nu, z)
+
+    
+    
+    if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
+        if (is_a_Number(*nu)) {
+            const Number &nnu = down_cast<const Number &>(*nu);
+            if (nnu.is_zero()) {
+                return mul(b, NegInf); // checked
+            } else if (is_a_Complex(nnu)) {
+                const ComplexBase &c = down_cast<const ComplexBase &>(nnu);
+                RCP<const Number> real_part = c.real_part();
+                if (real_part->is_zero()) {
+                    return Nan;
+                } else {
+                    return ComplexInf;
+                }
+            } else if (neq(nnu, *Nan)) {
+                return ComplexInf;
+            } else {
+                // Leave unevaluated when nu is Nan to match other CASs including SymPy
+                // XXX should this be Nan?
+            }
+        }
+    } else if (eq(*z, *Inf) or eq(*z, *mul(b, NegInf))
+//               or eq(*z, *mul(sqrt(b), Inf))   // multiplication of Infinity with Complex not implemented
+//               or eq(*z, *mul(sqrt(b), NegInf))) {
+               ) {
+        ComplexInf->is_complex();
+        return zero;
+    }
+
+    if (is_a<Integer>(*nu) and could_extract_minus(*nu)) {
+        return mul(pow(mul(minus_one, b), mul(minus_one, nu)),
+                   create(mul(minus_one, nu), z));
+    }
+
+    return make_rcp<const BesselClass>(nu, z);
+}
+
+static bool bessel_second_kind_is_canonical(const RCP<const Basic> &nu,
+                                            const RCP<const Basic> &z)
+{
+    if (is_a<Integer>(*z) and down_cast<const Integer &>(*z).is_zero()) {
+        if (is_a_Number(*nu) and not eq(*nu, *Nan)) {
+            return false;
+        }
+    }
+
+    if (is_a<Integer>(*nu) and could_extract_minus(*nu)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool BesselY::is_canonical(const RCP<const Basic> &nu,
+                           const RCP<const Basic> &z) const
+{
+    return bessel_second_kind_is_canonical(nu, z);
+}
+
+RCP<const Basic> BesselY::create(const RCP<const Basic> &nu,
+                                 const RCP<const Basic> &z) const
+{
+    return bessely(nu, z);
+}
+
+RCP<const Basic> bessely(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+{
+#ifdef HAVE_SYMENGINE_MPFR
+    if (is_a<RealMPFR>(*z)) {
+        if (is_a<Integer>(*nu)) {
+            signed long int nu_ = down_cast<const Integer &>(*nu).as_int();
+            mpfr_srcptr z_ = down_cast<const RealMPFR &>(*z).i.get_mpfr_t();
+            mpfr_class r(mpfr_get_prec(z_));
+            mpfr_yn(r.get_mpfr_t(), nu_, z_, MPFR_RNDN);
+            return real_mpfr(std::move(r));
+        } else {
+            throw NotImplementedError(
+                "For RealMPFR z in bessely(nu, z), nu must be an Integer.");
+        }
+    }
+#endif
+
+    RCP<const Integer> &b = one;
+    return bessel_second_kind<BesselY, bessely>(nu, z, b);
+}
+
+bool BesselI::is_canonical(const RCP<const Basic> &nu,
+                           const RCP<const Basic> &z) const
+{
+    return bessel_first_kind_is_canonical(nu, z);
+}
+
+RCP<const Basic> BesselI::create(const RCP<const Basic> &nu,
+                                 const RCP<const Basic> &z) const
+{
+    return besseli(nu, z);
+}
+
+RCP<const Basic> besseli(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+{
+#ifdef HAVE_SYMENGINE_MPFR
+    if (is_a<RealMPFR>(*z)) {
+        throw NotImplementedError("Not implemented.");
+    }
+#endif
+
+    RCP<const Integer> &a = minus_one;
+    return bessel_first_kind<BesselI, besseli, besselj>(nu, z, a);
+}
+
+bool BesselK::is_canonical(const RCP<const Basic> &nu,
+                           const RCP<const Basic> &z) const
+{
+    return bessel_second_kind_is_canonical(nu, z);
+}
+
+RCP<const Basic> BesselK::create(const RCP<const Basic> &nu,
+                                 const RCP<const Basic> &z) const
+{
+    return besselk(nu, z);
+}
+
+RCP<const Basic> besselk(const RCP<const Basic> &nu, const RCP<const Basic> &z)
+{
+    RCP<const Integer> &b = minus_one;
+    return bessel_second_kind<BesselK, besselk>(nu, z, b);
+}
+
 Gamma::Gamma(const RCP<const Basic> &arg) : OneArgFunction{arg}
 {
     SYMENGINE_ASSIGN_TYPEID()
@@ -3402,7 +3838,11 @@ RCP<const Basic> polygamma(const RCP<const Basic> &n_,
                 a += 1 / (f + i);
             }
             return add(Rational::from_mpq(a), res);
-        }
+        } else if (eq(*x_, *Nan)) {
+            return Nan;
+        } else if (eq(*x_, *Inf) or (eq(*x_, *NegInf))) {
+            return Inf;
+        } /*else */
     }
     return make_rcp<const PolyGamma>(n_, x_);
 }
